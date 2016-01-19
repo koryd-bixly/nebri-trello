@@ -51,3 +51,4 @@ fabric.properties
 # Add stuff here:::
 
 workspace/*
+*.pyc
