@@ -48,7 +48,17 @@ class trello_move_card(NebriOS):
 
         card = client.get_card(self.card_id)
         cardinfo = card.name.split('_')
-        if cardinfo.pop(0).lower() == 'deliver':
+        card_items = {
+            k:v for (k, v) in [
+            out.split('=') for out in card.description.split('\n')
+            ]}
+        skipdays = card_items.get('skip', '').split(',')
+
+        day_of_week = datetime.now().strftime('%A').lower()
+
+        description = card_items.get('description', '')
+
+        if cardinfo.pop(0).lower() == 'deliver' and day_of_week not in skipdays:
             list_name = '_'.join(cardinfo)
             logging.debug(list_name)
             board = card.board
@@ -59,7 +69,10 @@ class trello_move_card(NebriOS):
                     name = 'To Finish by: {}'.format(
                         duedate.strftime('%m-%d-%y, %H:%M')
                     )
-                    list.add_card(name, due=str(duedate), source=card.id)
+                    list.add_card(name, desc = description,
+                                  due=str(duedate), source=card.id)
+
+
 
 
         logging.debug(card.id)
