@@ -5,7 +5,7 @@ from trello import TrelloClient, Card
 
 
 LIST_NAME = "Done"
-TARGET_EMAIL = "briem@bixly.com"
+TARGET_EMAIL = "koryd@bixly.com"
 
 class trello_completed_notify(NebriOS):
     listens_to = ['fetch_trello_completed_cards']

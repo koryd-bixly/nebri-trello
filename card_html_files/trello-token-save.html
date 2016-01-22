@@ -1,7 +1,7 @@
 <polymer-element name="trello-token-save" extends="nebrios-form" target="trello_webhook.oauth_token">
     <template>
         <h2>Trello OAuth Token Creation</h2>
-        <a href="https://trello.com/1/authorize?key={{kvps.trello_api_key.value}}&expiration=never&response_type=token&scope=read,write" target="_blank">Click here to retrieve a token.</a>
+        <a href="https://trello.com/1/authorize?key={{kvps.trello_api_key.value}}&expiration=never&response_type=token&scope=read,write&name=nebrios" target="_blank">Click here to retrieve a token.</a>
         <nebrios-string id="trello_token" label="Generated Trello Token" required="true"></nebrios-string>
     </template>
     <script>

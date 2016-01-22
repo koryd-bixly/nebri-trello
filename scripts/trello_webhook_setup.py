@@ -4,7 +4,7 @@ class trello_webhook_setup(NebriOS):
     logging.basicConfig(filename='Trello_webhook_setup.log', level=logging.DEBUG)
 
     listens_to = ['trello_webhook_setup']
-    required = ['trello_api_key', 'trello_api_secret', 'instance_name', 'past_due_notify_address', 'completed_notify_address']
+
     
     # Note: This script is used to set up the trello webhook system.
     # If shared.TRELLO_API_KEY and shared.TRELLO_API_SECRET are not created,
