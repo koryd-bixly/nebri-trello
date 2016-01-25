@@ -7,7 +7,7 @@ from trello import TrelloClient
 # def create_oauth_token(expiration=None, scope=None, key=None, secret=None, name=None, output=True):
 
 
-logging.basicConfig(filename='trello_move_card.log', level=logging.DEBUG)
+logging.basicConfig(filename='trello_move_card.log', level=logging.INFO)
 
 
 # Get key here: https://trello.com/app-key
@@ -34,10 +34,11 @@ class trello_move_card(NebriOS):
 
     def action(self):
         logging.debug('start action')
-        try:
-            logging.debug(parent.trello_api_key)
-        except:
-            pass
+        # try:
+        #     logging.debug(parent.trello_api_key)
+        #     logging.debug('parent found, it worked!!')
+        # except:
+        #     logging.debug('parent not found. it didnt work')
 
         client = TrelloClient(
             api_key=self.trello_api_key,
@@ -45,6 +46,8 @@ class trello_move_card(NebriOS):
             token=self.trello_token,
             token_secret=self.token_secret
         )
+
+        logging.debug('client initialized')
 
         card = client.get_card(self.card_id)
         cardinfo = card.name.split('_')
@@ -58,10 +61,24 @@ class trello_move_card(NebriOS):
 
         description = card_items.get('description', '')
 
+        board_name = card_items.get('board', '')
+        logging.debug('board name: ' + board_name)
+
+        # get correct board.
+        board = card.board
+        if board_name:
+            # TODO, store this in a model
+            all_boards = client.fetch_json('/members/me/boards/',
+                                           query_params={'fields': "name, id"})
+            for b in all_boards:
+                if b.get('name') == board_name:
+                    board = client.get_board(b['id'])
+                    logging.debug('board id: ' + str(board))
+                    break
+
         if cardinfo.pop(0).lower() == 'deliver' and day_of_week not in skipdays:
             list_name = '_'.join(cardinfo)
             logging.debug(list_name)
-            board = card.board
             for list in board.open_lists():
                 if list.name == list_name:
                     # card found. Now buid it...
@@ -69,11 +86,9 @@ class trello_move_card(NebriOS):
                     name = 'To Finish by: {}'.format(
                         duedate.strftime('%m-%d-%y, %H:%M')
                     )
-                    list.add_card(name, desc = description,
+                    list.add_card(name, desc=description,
                                   due=str(duedate), source=card.id)
-
-
-
+                    # TODO what if list is never found??
 
         logging.debug(card.id)
         logging.debug(card.name)

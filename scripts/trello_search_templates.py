@@ -18,6 +18,7 @@ logging.basicConfig(filename='trello_search_templates.log', level=logging.DEBUG)
 
 
 class trello_search_templates(NebriOS):
+    # TODO change to schedule
     listens_to = ['trello_search_templates']
 
     required = [

@@ -55,3 +55,6 @@ workspace/*
 
 korydkey.*
 quick_setup.py
+
+helpers/*
+nick_trello.py
