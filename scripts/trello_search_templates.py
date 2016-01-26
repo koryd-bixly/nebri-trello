@@ -43,12 +43,20 @@ class trello_search_templates(NebriOS):
 
         boards = client.list_boards()
         for board in boards:
+            # see if the template id is in the board.
+            found = any(
+                self.template_label_id == la.id for la in board.get_labels(
+                    limit=500
+                )
+            )
+            # if template id is not found, keep looking in the next board.
+            if not found:
+                continue
             cards = board.open_cards()
             for card in cards:
-                if card.name.startswith('deliver'):
+                if any(self.template_label_id == la.id for la in card.list_labels):
                     logging.debug('card found: ' + card.name)
                     logging.debug('card id: ' + card.id)
-                    # do something to run this card...
 
                     # This could be much niceer with a model...
                     p = Process.objects.create()
