@@ -62,9 +62,23 @@ class trello_search_templates(NebriOS):
                     logging.debug('card id: ' + card.id)
 
                     # This could be much niceer with a model...
+                    # p = Process.objects.create()
+                    # p.card_id = card.id
+                    # p.trello_move_card = True
+                    # p.save()
+
+                    card_items = {
+                        k:v for (k, v) in [
+                        out.split('=') for out in card.description.split('\n')
+                        ]}
+
+
+
                     p = Process.objects.create()
-                    p.card_id = card.id
-                    p.trello_move_card = True
+                    p.create_card_id = card.id
+                    p.create_model_card_id = True
+                    p.create_custom_send = card_items.get('custom_send', '')
+                    p.create_card_items = card_items
                     p.save()
 
         logging.debug('finished')
