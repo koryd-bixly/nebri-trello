@@ -1,4 +1,4 @@
-# v0.0.3
+# v0.0.10
 # requires: croniter,  pip install git+https://github.com/sarumont/py-trello
 
 import logging
@@ -19,10 +19,6 @@ class trello_move_card(NebriOS):
 
     required = [
         'card_id',
-        'trello_api_key',
-        'trello_api_secret',
-        'trello_token',
-        'token_secret'
     ]
 
     def check(self):
@@ -30,22 +26,17 @@ class trello_move_card(NebriOS):
         return self.trello_move_card == True
 
     def action(self):
-        self.trello_move_card = 'Ran'
+        self.trello_move_card = 'Ran' + str(datetime.now())
         logging.debug('start action')
-        # try:
-        #     logging.debug(parent.trello_api_key)
-        #     logging.debug('parent found, it worked!!')
-        # except:
-        #     logging.debug('parent not found. it didnt work')
         if self.card_id == '':
             # TODO add check to see if this card is pending...
             pass
 
         client = TrelloClient(
-            api_key=self.trello_api_key,
-            api_secret=self.trello_api_secret,
-            token=self.trello_token,
-            token_secret=self.token_secret
+            api_key=shared.trello_api_key,
+            api_secret=shared.trello_api_secret,
+            token=shared.trello_token,
+            token_secret=shared.token_secret
         )
 
         logging.debug('client initialized')
@@ -91,7 +82,15 @@ class trello_move_card(NebriOS):
 
         # next check for cron type scheduler
         if inschedule:
-            duedate = croniter(inschedule).get_next(datetime)
+            try:
+                seconds = croniter(inschedule).get_next(float)
+                duedate = datetime.utcfromtimestamp(seconds)
+            except Exception as e:
+                # let the user know the date time was bad
+                logging.debug(str(e))
+                self.cron_error = str(e)
+                raise e
+                # return
         else:
             delta = PREBUILT.get(indelta, timedelta(days=1))
             duedate = datetime.now() + delta
@@ -108,6 +107,9 @@ class trello_move_card(NebriOS):
             new.set_pos('top')
 
             # remove template label, so it does not get run again...
+            # logging.debug(shared.template_label_id)
+            # new.remove_label(shared.template_label_id)
+            # logging.debug(str(new.labels))
             for label in new.labels:
                 if label.name == 'template checklist':
                     new.remove_label(label)
