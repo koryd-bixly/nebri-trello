@@ -4,6 +4,8 @@ import traceback
 
 from trello import TrelloClient
 
+from trello_webhooks import Webhook
+
 
 logging.basicConfig(filename='trello_webhook_module.log', level=logging.DEBUG)
 
@@ -28,6 +30,23 @@ def oauth_token(request):
             p.token=request.FORM.trello_token
             p.trello_watch_boards_for_user = True
             p.save()
+
+
+def settings(request):
+    if request.FORM:
+        user = request.user
+        try:
+            hooks = Webhook.filter(user=user)
+            logging.debug(hooks)
+            logging.debug(request.FORM)
+        except:
+            logging.debug('oops')
+    return '200 OK'
+
+
+def test_endpoint(request):
+    return '200 OK'
+
 
 def board_callback(request):
     try:
