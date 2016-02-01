@@ -1,0 +1,84 @@
+<polymer-element name="trello-webhook-settings" extends="nebrios-element">
+    <template>
+        <style>
+            .header {
+                font-weight: bold;
+                font-size: 18px;
+                background-color: lightgray;
+            }
+        </style>
+        <nebrios-ajax></nebrios-ajax>
+        <h2>Trello Webhook Settings</h2>
+        <nebrios-boolean id="everything" on-change="{{updateEverything}}" label="Everything"></nebrios-boolean>
+        <div on-click="{{toggleBoards}}" class="header">
+            Boards
+        </div>
+        <div hidden?="{{hideBoards}}" id="boards">
+            <template repeat="{{board in boards}}">
+                <div>
+                    <nebrios-boolean id="{{board.id}}" label="{{board.name}}"></nebrios-boolean>
+                </div>
+            </template>
+        </div>
+        <div on-click="{{toggleLists}}" class="header">
+            Lists
+        </div>
+        <div hidden?="{{hideLists}}" id="lists">
+            <template repeat="{{list in lists}}">
+                <div>
+                    <nebrios-boolean id="{{list.id}}" label="{{list.name}}"></nebrios-boolean>
+                </div>
+            </template>
+        </div>
+        <div on-click="{{toggleCards}}" class="header">
+            Cards
+        </div>
+        <div hidden?="{{hideCards}}" id="cards">
+            <template repeat="{{card in cards}}">
+                <div>
+                    <nebrios-boolean id="{{card.id}}" label="{{card.name}}"></nebrios-boolean>
+                </div>
+            </template>
+        </div>
+        <paper-button>Submit</paper-button>
+    </template>
+    <script>
+        Polymer("trello-webhook-settings", {
+            boards: [],
+            lists: [],
+            cards: [],
+            hideBoards: true,
+            hideLists: true,
+            hideCards: true,
+            everythingChecked: false,
+            updateCheckedList: function(e, detail) {
+                console.log(e, detail);
+            },
+            toggleBoards: function() {
+                this.hideBoards = !this.hideBoards;
+                console.log(this.hideBoards, this.kvps.boards);
+            },
+            toggleLists: function() {
+                this.hideLists = !this.hideLists;
+                console.log(this.hideLists, this.kvps.lists);
+            },
+            toggleCards: function() {
+                this.hideCards = !this.hideCards;
+                console.log(this.hideCards, this.kvps.cards);
+            },
+            updateEverything: function(e, detail) {
+                console.log(e, detail);
+                if (this.$.everything.checked) {
+
+                }
+            },
+            attached: function() {
+                this.kvps.boards.value.forEach(function(board){
+                    if (board.value.hooked.value) {
+                        console.log(this);
+                    }
+                });
+            }
+        });
+    </script>
+</polymer-element>

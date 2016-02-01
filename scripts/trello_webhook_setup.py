@@ -70,8 +70,8 @@ class trello_webhook_setup(NebriOS):
                 lists.append({'id': list.id, 'name': list.name, 'hooked': True if list.id in hooked_ids else False})
             for card in board.all_cards():
                 cards.append({'id': card.id, 'name': card.name, 'hooked': True if card.id in hooked_ids else False})
-        self.lists = lists
-        self.cards = cards
+        # self.lists = lists
+        # self.cards = cards
         self.boards = boards
         self.logging.debug('load settings card')
         load_card('trello-webhook-settings')
