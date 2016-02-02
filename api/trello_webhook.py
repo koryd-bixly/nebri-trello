@@ -1,13 +1,16 @@
 import logging
 import pytz
 import traceback
+import json
 
 from trello import TrelloClient
 
 from trello_webhooks import Webhook
+from instance_settings import INSTANCE_NAME
 
 
-logging.basicConfig(filename='trello_webhook_module.log', level=logging.DEBUG)
+# logging.basicConfig(filename='trello_webhook_module.log', level=logging.DEBUG)
+logging.basicConfig(filename='/home/nebrios-script/workspace/lololololololol.log', level=logging.DEBUG)
 
 ACTIONS_FOR_CACHING = ['addAttachmentToCard', 'addChecklistToCard', 'addLabelToCard', 'convertToCardFromCheckItem',
                        'createCard', 'createCheckItem', 'deleteAttachmentFromCard', 'deleteCheckItem',
@@ -17,22 +20,100 @@ DONE_LIST_NAME = "Done"
 
 
 def oauth_token(request):
-    if request.FORM:
-        user = request.user
-        try:
-            p = Process.objects.get(user=request.user, kind="trello_oauth_token")
-            p.token = request.FORM.trello_token
-            p.save()
-        except:
-            p = Process.objects.create()
-            p.user=request.user
-            p.kind="trello_oauth_token"
-            p.token=request.FORM.trello_token
-            p.trello_watch_boards_for_user = True
-            p.save()
+    logging.debug('oauth_token start')
+    try:
+        if request.FORM:
+            user = request.user
+            logging.debug('wat')
+            try:
+                logging.debug('try')
+                p = Process.objects.get(user=request.user, kind="trello_oauth_token")
+                p.token = request.FORM.trello_token
+                p.save()
+                logging.debug('saved')
+            except:
+                logging.debug('except')
+                p = Process.objects.create()
+                p.user=request.user
+                p.kind="trello_oauth_token"
+                p.token=request.FORM.trello_token
+                p.trello_watch_boards_for_user = True
+                p.save()
+                logging.debug('saved except')
+            setup_webhooks(user)
+    except Exception as e:
+        logging.debug(str(e))
+    return '200 LOL'
+
+
+def setup_webhooks(user):
+    client = _get_client(user)
+    hooked_ids = [h.id_model for h in client.list_hooks()]
+    hooks_to_create = []
+    logging.debug('getting boards')
+    for board in client.list_boards():
+        logging.debug(board.id)
+        if board.id not in hooked_ids:
+            hooks_to_create.append({
+                'desc': 'Webhook for %s for board %s' % (user, board.name),
+                'callback_url': 'https://%s.nebrios.com/api/v1/trello_webhook/callback?user=%s&id=%s' %(INSTANCE_NAME, user, board.id),
+                'id_model': board.id,
+                'type_model': 'board',
+                'user': user
+            })
+        logging.debug('getting cards!')
+        for card in board.all_cards():
+            logging.debug(card.id)
+            if card.id not in hooked_ids:
+                card_name = card.name.decode("utf-8", "replace")
+                logging.debug(card_name)
+                hooks_to_create.append({
+                    'desc': 'Webhook for %s for card %s' % (user, card_name),
+                    'callback_url': 'https://%s.nebrios.com/api/v1/trello_webhook/callback?user=%s&id=%s' %(INSTANCE_NAME, user, card.id),
+                    'id_model': card.id,
+                    'type_model': 'card',
+                    'user': user
+                })
+    logging.debug(len(hooks_to_create))
+    for hook in hooks_to_create:
+        webhook = client.create_hook(hook['callback_url'], hook['id_model'], desc=hook['desc'])
+        new_hook = Webhook(
+            user=hook['user'],
+            description=hook['desc'],
+            callback=hook['callback_url'],
+            model_id=hook['id_model'],
+            model_type=hook['type_model'],
+            trello_id=webhook.id
+        )
+        new_hook.save()
+
+
+def callback(request):
+    user = request.GET['user']
+    webhook_id = request.GET['id']
+    hook = Webhook.filter(user=user, trello_id=webhook_id)
+    logging.debug(request.POST)
+    return '200 OK'
+
+
+def get_items(request):
+    user = request.user
+    client = _get_client(user)
+    hooked_ids = [h.id_model for h in client.list_hooks()]
+    lists = []
+    cards = []
+    boards = []
+    for board in client.list_boards():
+        boards.append({'id': board.id, 'name': board.name, 'hooked': True if board.id in hooked_ids else False})
+        for list in board.all_lists():
+            lists.append({'id': list.id, 'name': list.name, 'hooked': True if list.id in hooked_ids else False})
+        for card in board.all_cards():
+            cards.append({'id': card.id, 'name': card.name, 'hooked': True if card.id in hooked_ids else False})
+    return json.dumps({'boards': boards, 'cards': cards, 'lists': lists})
 
 
 def settings(request):
+    logging.debug(request.BODY)
     if request.FORM:
         user = request.user
         try:
@@ -45,6 +126,7 @@ def settings(request):
 
 
 def test_endpoint(request):
+    logging.debug(request.BODY)
     return '200 OK'
 
 
@@ -169,15 +251,15 @@ def _get_list(board, list_id):
 def _get_board(board_id):
     return Process.objects.get(kind="trello_board", board_id=board_id)
 
-def _get_trello_token():
+def _get_trello_token(user):
     try:
-        return Process.objects.get(kind="trello_oauth_token").token
+        return Process.objects.get(kind="trello_oauth_token", last_actor=user).token
     except:
         load_card('trello-token-save')
         raise Exception('Token does not exist. Please supply one on the Trello OAuth Token Creation card or run trello_webhook_setup.')
     return ""
 
-def _get_client():
-    token = _get_trello_token()
+def _get_client(user):
+    token = _get_trello_token(user)
     return TrelloClient(api_key=shared.TRELLO_API_KEY, api_secret=shared.TRELLO_API_SECRET, token=token)
 

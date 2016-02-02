@@ -1,3 +1,5 @@
+<link rel="import" href="/static/core-label/core-label.html">
+
 <polymer-element name="trello-webhook-settings" extends="nebrios-element">
     <template>
         <style>
@@ -7,40 +9,55 @@
                 background-color: lightgray;
             }
         </style>
-        <nebrios-ajax></nebrios-ajax>
+        <nebrios-ajax id="get_items" url="/api/v1/trello_webhook/get_items/" auto="false"
+                      on-error="{{onGetItemsError}}" on-response="{{onGetItemsResponse}}"></nebrios-ajax>
+        <nebrios-ajax id="save_settings" url="/api/v1/trello_webhook/settings/" auto="false"
+                      on-error="{{onSaveError}}" on-response="{{onSaveResponse}}"></nebrios-ajax>
         <h2>Trello Webhook Settings</h2>
-        <nebrios-boolean id="everything" on-change="{{updateEverything}}" label="Everything"></nebrios-boolean>
+        <paper-checkbox id="everything" on-change="{{updateEverything}}" label="Everything"></paper-checkbox>
         <div on-click="{{toggleBoards}}" class="header">
             Boards
         </div>
         <div hidden?="{{hideBoards}}" id="boards">
-            <template repeat="{{board in boards}}">
-                <div>
-                    <nebrios-boolean id="{{board.id}}" label="{{board.name}}"></nebrios-boolean>
-                </div>
-            </template>
+            <section>
+                <template repeat="{{board in boards}}">
+                    <core-label horizontal layout>
+                        <paper-checkbox id="{{board.id}}" checked="{{board.hooked}}" for></paper-checkbox>
+                        <div vertical layout>{{board.name}}</div>
+                    </core-label>
+                    <br>
+                </template>
+            </section>
         </div>
         <div on-click="{{toggleLists}}" class="header">
             Lists
         </div>
         <div hidden?="{{hideLists}}" id="lists">
-            <template repeat="{{list in lists}}">
-                <div>
-                    <nebrios-boolean id="{{list.id}}" label="{{list.name}}"></nebrios-boolean>
-                </div>
-            </template>
+            <section>
+                <template repeat="{{list in lists}}">
+                    <core-label horizontal layout>
+                        <paper-checkbox id="{{list.id}}" checked="{{list.hooked}}" for></paper-checkbox>
+                        <div vertical layout>{{list.name}}</div>
+                    </core-label>
+                    <br>
+                </template>
+            </section>
         </div>
         <div on-click="{{toggleCards}}" class="header">
             Cards
         </div>
         <div hidden?="{{hideCards}}" id="cards">
             <template repeat="{{card in cards}}">
-                <div>
-                    <nebrios-boolean id="{{card.id}}" label="{{card.name}}"></nebrios-boolean>
-                </div>
+                <section>
+                    <core-label horizontal layout>
+                        <paper-checkbox id="{{card.id}}" checked="{{card.hooked}}" for></paper-checkbox>
+                        <div vertical layout>{{card.name}}</div>
+                    </core-label>
+                    <br>
+                </section>
             </template>
         </div>
-        <paper-button>Submit</paper-button>
+        <paper-button on-click="{{submit}}">Submit</paper-button>
     </template>
     <script>
         Polymer("trello-webhook-settings", {
@@ -51,6 +68,20 @@
             hideLists: true,
             hideCards: true,
             everythingChecked: false,
+            onGetItemsError: function(e, detail) {
+                console.log(e, detail);
+            },
+            onGetItemsResponse: function(e, detail) {
+                this.boards = detail.response.boards;
+                this.lists = detail.response.lists;
+                this.cards = detail.response.cards;
+            },
+            onSaveError: function(e, detail) {
+                console.log(e, detail);
+            },
+            onSaveResponse: function(e, detail) {
+                console.log(e, detail);
+            },
             updateCheckedList: function(e, detail) {
                 console.log(e, detail);
             },
@@ -73,11 +104,11 @@
                 }
             },
             attached: function() {
-                this.kvps.boards.value.forEach(function(board){
-                    if (board.value.hooked.value) {
-                        console.log(this);
-                    }
-                });
+                this.$.get_items.go();
+            },
+            submit: function() {
+                this.$.save_settings.body = {'boards': this.boards, 'lists': this.lists, 'cards': this.cards};
+                this.$.save_settings.go();
             }
         });
     </script>
