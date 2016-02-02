@@ -26,8 +26,9 @@ class trello_poll_watched_boards(NebriOS):
         for board in watched_boards:
             # due in cards does not seem to be working properly...
             # cards =
+            # TODO make a library from this...
             cards = client.fetch_json(
-                'boards/{}/cards/'.format(board.id),
+                'boards/{id}/cards/'.format(id=board.id),
                 query_params=params
             )
             for card in board.open_cards():
@@ -44,18 +45,18 @@ class trello_poll_watched_boards(NebriOS):
 
                 now = datetime.now()
                 oneday = now + timedelta(days=1)
-                checklists = card.get('checklists')
-                for checklist in checklists:
-                    finished = all(
-                        item.get('state') == 'complete'
-                        for item in checklist.get('checkItems')
-                    )
-
-                if duedate and checklists and now <= duedate <= oneday:
-                    # checks if all items in checklist are finished
-                    finished = all([item.get('checked', False) for item in
-                                checklist.items for checklist in checklists])
-                    if not finished:
+                if duedate and now <= duedate <= oneday:
+                    checklists = card.get('checklists')
+                    warn = False
+                    for checklist in checklists:
+                        finished = all(
+                            item.get('state') == 'complete'
+                            for item in checklist.get('checkItems')
+                        )
+                        if not finished:
+                            warn = True
+                            break
+                    if warn:
                         # check checklist
                         send_mail('koryd@bixly.com', '''
                         its not done yet''')
