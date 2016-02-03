@@ -24,7 +24,7 @@ class trello_watch_boards_for_user(NebriOS):
                 self.trello_token = Process.objects.get(user=self.last_actor, kind="oauth_token").token
             except:
                 raise Exception('Token does not exist. Please supply one or run trello_webhook_setup.')
-                return False
+                # return False
         if self.trello_watch_boards_for_user is True:
             return self.verify_user()
         
