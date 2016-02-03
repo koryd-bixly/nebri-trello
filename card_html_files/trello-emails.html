@@ -1,0 +1,12 @@
+<polymer-element name="trello-emails" extends="nebrios-form" target="trello_webhook.update_users">
+    <template>
+        <h2>Trello User Email Update</h2>
+        <template repeat="{{user in kvp.users.value}}">
+
+        </template>
+        <nebrios-string id="trello_token" label="Generated Trello Token" required="true"></nebrios-string>
+    </template>
+    <script>
+        Polymer("trello-emails", {});
+    </script>
+</polymer-element>

@@ -5,7 +5,7 @@ import json
 
 from trello import TrelloClient
 
-from trello_webhooks import Webhook
+from trello_webhooks import Webhook, TrelloUserInfo
 from instance_settings import INSTANCE_NAME
 
 
@@ -50,9 +50,15 @@ def setup_webhooks(user):
     client = _get_client(user)
     hooked_ids = [h.id_model for h in client.list_hooks()]
     hooks_to_create = []
+    trello_users = []
     logging.debug('getting boards')
     for board in client.list_boards():
         logging.debug(board.id)
+        members_url = 'boards/%s/members' % board.id
+        members_json = client.fetch_json(members_url)
+        for member in members_json:
+            if member not in trello_users:
+                trello_users.append(member)
         if board.id not in hooked_ids:
             hooks_to_create.append({
                 'desc': 'Webhook for %s for board %s' % (user, board.name),
@@ -86,6 +92,16 @@ def setup_webhooks(user):
             trello_id=webhook.id
         )
         new_hook.save()
+    for user in trello_users:
+        user_info = TrelloUserInfo(
+            trello_id=user['id'],
+            trello_username=user['username'],
+            trello_fullname=user['fullName']
+        )
+        user_info.save()
+    p = Process.objects.create()
+    p.load_trello_email_card = True
+    p.save()
 
 
 def callback(request):

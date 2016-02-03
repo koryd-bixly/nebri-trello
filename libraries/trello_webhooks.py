@@ -9,3 +9,10 @@ class Webhook(NebriOSModel):
     model_id = NebriOSField(required=True)
     model_type = NebriOSField(required=True)
     trello_id = NebriOSField(required=True, default='')
+
+
+class TrelloUserInfo(NebriOSModel):
+    email = NebriOSField(required=True, default='')
+    trello_id = NebriOSField(required=True)
+    trello_username = NebriOSField(required=True)
+    trello_fullname = NebriOSField(required=True)
