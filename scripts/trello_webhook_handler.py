@@ -1,5 +1,4 @@
-from trello_webhook import TrelloUserInfo, Webhook
-
+from trello_models import TrelloWebhook, TrelloCard
 
 class trello_webhook_handler(NebriOS):
     import logging
@@ -13,7 +12,11 @@ class trello_webhook_handler(NebriOS):
 
     def action(self):
         self.handle_trello_webhook = "Ran"
+        self.logging.debug(self.raw_data)
         # check for existance of callback urls
-        webhook = TrelloUserInfo.filter(email='')
-        self.users = [{'username': user.trello_username, 'email': ''} for user in trello_users_to_update]
-        load_card('trello-emails')
+        webhook = TrelloWebhook.get(trello_id=self.raw_data['action']['data']['id'])
+        card = TrelloCard.get(id=self.raw_data['action']['data']['id'])
+
+        if self.raw_data['action']['data']['type'] == 'updateCard' && self.raw_data['model']['closed'] == True:
+            # card has been archived. check for rule prerequisites
+

@@ -1,6 +1,3 @@
-from trello import TrelloClient
-
-
 class trello_webhook_setup(NebriOS):
     import logging
 

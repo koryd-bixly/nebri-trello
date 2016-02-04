@@ -5,8 +5,8 @@ import json
 
 from trello import TrelloClient
 
-from trello_webhooks import Webhook, TrelloUserInfo
-from instance_settings import INSTANCE_NAME
+from trello_models import TrelloWebhook, TrelloUserInfo, TrelloCard
+from instance_settings import INSTANCE_HTTPS_URL
 
 
 # logging.basicConfig(filename='trello_webhook_module.log', level=logging.DEBUG)
@@ -51,9 +51,7 @@ def setup_webhooks(user):
     hooked_ids = [h.id_model for h in client.list_hooks()]
     hooks_to_create = []
     trello_users = []
-    logging.debug('getting boards')
     for board in client.list_boards():
-        logging.debug(board.id)
         members_url = 'boards/%s/members' % board.id
         members_json = client.fetch_json(members_url)
         for member in members_json:
@@ -62,28 +60,36 @@ def setup_webhooks(user):
         if board.id not in hooked_ids:
             hooks_to_create.append({
                 'desc': 'Webhook for %s for board %s' % (user, board.name),
-                'callback_url': 'https://%s.nebrios.com/api/v1/trello_webhook/callback?user=%s&id=%s' %(INSTANCE_NAME, user, board.id),
+                'callback_url': '%s/api/v1/trello_webhook/callback?user=%s&id=%s' %(INSTANCE_HTTPS_URL, user, board.id),
                 'id_model': board.id,
                 'type_model': 'board',
                 'user': user
             })
-        logging.debug('getting cards!')
         for card in board.all_cards():
-            logging.debug(card.id)
             if card.id not in hooked_ids:
                 card_name = card.name.decode("utf-8", "replace")
-                logging.debug(card_name)
                 hooks_to_create.append({
                     'desc': 'Webhook for %s for card %s' % (user, card_name),
-                    'callback_url': 'https://%s.nebrios.com/api/v1/trello_webhook/callback?user=%s&id=%s' %(INSTANCE_NAME, user, card.id),
+                    'callback_url': '%s/api/v1/trello_webhook/callback?user=%s&id=%s' %(INSTANCE_HTTPS_URL, user, card.id),
                     'id_model': card.id,
                     'type_model': 'card',
                     'user': user
                 })
+                try:
+                    card = TrelloCard.get(id=card.id)
+                except TrelloCard.DoesNotExist:
+                    card_json = client.fetch_json('cards/%s' %card.id)
+                    new_card = TrelloCard.get_or_create(
+                        id=card.id,
+                        idBoard=board.id,
+                        card_json=card_json
+                    )
+                    new_card.save()
+
     logging.debug(len(hooks_to_create))
     for hook in hooks_to_create:
         webhook = client.create_hook(hook['callback_url'], hook['id_model'], desc=hook['desc'])
-        new_hook = Webhook(
+        new_hook = TrelloWebhook(
             user=hook['user'],
             description=hook['desc'],
             callback=hook['callback_url'],
@@ -105,10 +111,18 @@ def setup_webhooks(user):
 
 
 def callback(request):
-    user = request.GET['user']
-    webhook_id = request.GET['id']
-    hook = Webhook.filter(user=user, trello_id=webhook_id)
+    logging.debug('webhook received!')
+    logging.debug(request.GET)
     logging.debug(request.POST)
+    try:
+        card = TrelloCard.get(id=request.GET['id'])
+    except:
+        card = None
+    # here's where we would update the TrelloCard model... IF WE HAD A WAY
+    p = Process.objects.create()
+    p.raw_data = request.BODY
+    p.handle_trello_webhook = True
+    p.save()
     return '200 OK'
 
 
