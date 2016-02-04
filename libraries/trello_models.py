@@ -3,6 +3,7 @@ from nebriosmodels import NebriOSField, NebriOSModel
 class TrelloCard(NebriOSModel):
 
     id = NebriOSField(required=True)
+    idcard = NebriOSField(required=True)
     idBoard = NebriOSField(required=True)
     idMembers = NebriOSField() # possible reference to
     idLabels = NebriOSField()
