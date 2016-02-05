@@ -4,21 +4,29 @@ from collections import defaultdict
 logging.basicConfig(filename='trello_overdue_cards_notify.log', level=logging.DEBUG)
 
 from trello_models import TrelloCard, TrelloUserInfo
-from trello_utils import get_card_creator
+from trello_utils import get_card_creator, _get_client
 from trello import TrelloClient
 
 
 class trello_overdue_cards_notify(NebriOS):
+    '''
+    This script looks for all overdue cards and notifies the creator that
+    they are overdue. If a creator is not found, it warns the last actor.
+    cards are marked as the warning as been sent so they will not be renotified
+    later.
+    '''
 
     listens_to = ['trello_overdue_cards_notify']
 
     def check(self):
         # look for overdue cards within the last day...
+        self.last_actor = 'koryd@bixly.com'
+        now = datetime.now()
         overdue_cards = []
         if self.trello_overdue_cards_notify == True:
             all_overdue_cards = TrelloCard.filter(overdue_notice_sent=False)
             for card in all_overdue_cards:
-                if card.duedate:
+                if card.duedate and card.duedate < now:
                     overdue_cards.append(card)
 
             self.overdue_cards = overdue_cards
@@ -28,6 +36,8 @@ class trello_overdue_cards_notify(NebriOS):
 
     def action(self):
         self.trello_overdue_cards_notify = 'RAN: ' + str(datetime.now())
+
+        client = _get_client(self.last_actor)
         notify_users = defaultdict(list)
         for card in self.overdue_cards:
             if card.idMemberCreator is None:
