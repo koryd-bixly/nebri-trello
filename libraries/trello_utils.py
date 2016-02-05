@@ -2,7 +2,6 @@ from trello_models import TrelloCard, Webhook, TrelloUserInfo
 from instance_settings import INSTANCE_HTTPS_URL
 from trello import TrelloClient
 import logging
-import requests
 
 logging.basicConfig(filename='trello_utils.log', level=logging.DEBUG)
 
@@ -117,7 +116,7 @@ def unarchive_card(card_id, last_actor):
 
 def _get_trello_token(user):
     try:
-        return Process.objects.get(kind="trello_oauth_token", last_actor=user).token
+        return Process.objects.get(kind="trello_oauth_token", user=user).token
     except:
         load_card('trello-token-save')
         raise Exception('Token does not exist. Please supply one on the Trello OAuth Token Creation card or run trello_webhook_setup.')
@@ -143,7 +142,6 @@ def get_card_creator(idcard, client=None, params=None):
             raise Exception('Could not get client: %s' % str(e))
     if params is None:
         param = dict(fields='idMemberCreator')
-
     try:
         response = client.fetch_json(
             'cards/{id}/actions'.format(id=idcard),
@@ -163,19 +161,29 @@ def delete_hooks(user, hook_id=None):
     if hook_id is None:
         # we delete them  all!
         hooked_ids = [h.get('idModel') for h in client.fetch_json('/members/me/tokens?webhooks=true') if h.get('idModel')]
+        logging.debug('delete all the hooks!')
         for hook in hooked_ids:
             try:
-                requests.delete('/webhooks/%s' % hook)
+                client.fetch_json(
+                    '/webhooks/%s' % hook,
+                    http_method='DELETE'
+                )
                 webhook = Webhook.get(trello_id=hook)
                 webhook.delete()
             except Exception as e:
-                logging.error(str(e))
+                logging.debug(str(e))
+                return str(e)
         return True
     else:
+        logging.debug('delete just one hook')
         try:
-            requests.delete('/webhooks/%s' % hook_id)
+            client.fetch_json(
+                '/webhooks/%s' % hook_id,
+                http_method='DELETE'
+            )
             webhook = Webhook.get(trello_id=hook_id)
             webhook.delete()
         except Exception as e:
             logging.error(str(e))
+            return str(e)
         return True
