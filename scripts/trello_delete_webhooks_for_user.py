@@ -6,13 +6,12 @@ class trello_delete_webhooks_for_user(NebriOS):
     listens_to = ['trello_delete_webhooks_for_user']
 
     def check(self):   
-        return trello_delete_webhooks_for_user == True
+        return self.trello_delete_webhooks_for_user == True
     
     def action(self):
-        self.trello_delete_webhooks_for_user = "Ran"
-        logging.debug('Doing trello_delete_webhooks_for_user action...')
-
         if self.hook_id:
-            delete_hooks(self.last_actor, self.hook_id)
+            deleted = delete_hooks(self.last_actor, self.hook_id)
         else:
-            delete_hooks(self.last_actor)
+            deleted = delete_hooks(self.last_actor)
+
+        self.trello_delete_webhooks_for_user = deleted
