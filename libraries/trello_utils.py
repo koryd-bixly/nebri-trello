@@ -97,3 +97,23 @@ def create_webhook(card, client, hooked_ids=None):
             )
             new_hook.save()
             hooked_ids.append(card.get('id'))
+
+
+def get_card_creator(idcard, client, params=None):
+    # gets the idmemberCreator needed EVERYWHERE and should be returned already.
+    if params is None:
+        param = dict(fields='idMemberCreator')
+
+    try:
+        response = client.fetch_json(
+            'cards/{id}/actions'.format(id=idcard),
+            query_params=params
+        )
+    except Exception as e:
+        logging.error(str(e))
+        creator = None
+    else:
+        creator = response.get('idMemberCreator')
+
+    return creator
+

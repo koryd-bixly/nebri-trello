@@ -1,7 +1,11 @@
 import logging
+from collections import defaultdict
+
 logging.basicConfig(filename='trello_overdue_cards_notify.log', level=logging.DEBUG)
 
 from trello_models import TrelloCard
+from trello_utils import get_card_creator
+from trello import TrelloClient
 
 
 class trello_overdue_cards_notify(NebriOS):
@@ -18,6 +22,7 @@ class trello_overdue_cards_notify(NebriOS):
 
     def action(self):
         self.trello_overdue_cards_notify = 'RAN: ' + str(datetime.now())
+        notify_users = defaultdict(list)
         newlist = []
         for card in self.overdue_cards:
             if card.duedate:

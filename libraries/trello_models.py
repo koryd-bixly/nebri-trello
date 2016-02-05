@@ -12,6 +12,7 @@ class TrelloCard(NebriOSModel):
     idLabels = NebriOSField()
     idChecklists = NebriOSField()
     idList = NebriOSField()
+    idMemberCreator = NebriOSField()
 
     checklists = NebriOSField()
     due = NebriOSField()
