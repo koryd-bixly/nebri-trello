@@ -4,7 +4,7 @@ from collections import defaultdict
 logging.basicConfig(filename='trello_overdue_cards_notify.log', level=logging.DEBUG)
 
 from trello_models import TrelloCard, TrelloUserInfo
-from trello_utils import get_card_creator
+from trello_utils import get_card_creator, _get_client
 from trello import TrelloClient
 
 
@@ -20,6 +20,7 @@ class trello_overdue_cards_notify(NebriOS):
 
     def check(self):
         # look for overdue cards within the last day...
+        self.last_actor = 'koryd@bixly.com'
         now = datetime.now()
         overdue_cards = []
         if self.trello_overdue_cards_notify == True:
@@ -35,6 +36,8 @@ class trello_overdue_cards_notify(NebriOS):
 
     def action(self):
         self.trello_overdue_cards_notify = 'RAN: ' + str(datetime.now())
+
+        client = _get_client(self.last_actor)
         notify_users = defaultdict(list)
         for card in self.overdue_cards:
             if card.idMemberCreator is None:
