@@ -4,8 +4,9 @@ from collections import defaultdict
 logging.basicConfig(filename='trello_overdue_cards_notify.log', level=logging.DEBUG)
 
 from trello_models import TrelloCard, TrelloUserInfo
-from trello_utils import get_card_creator, _get_client
+from trello_utils import get_card_creator
 from trello import TrelloClient
+# 1
 
 
 class trello_overdue_cards_notify(NebriOS):

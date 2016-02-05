@@ -11,17 +11,7 @@ class trello_poll_watched_boards(NebriOS):
     listens_to = ['trello_poll_watched_boards']
 
     def check(self):
-        logging.info(self.last_actor)
-        try:
-            p = Process.objects.get(kind="trello_oauth_token", user=self.last_actor)
-                                    # last_actor=self.last_actor)
-        except Process.DoesNotExist as e:
-            logging.info(e)
-            return False
-        self.trello_token = p.token
-        self.trello_api_key = shared.trello_api_key
-        required = self.trello_token and self.trello_api_key
-        return self.trello_poll_watched_boards == True and required
+        return self.trello_poll_watched_boards == True
 
     def action(self):
         # TODO add this to some general login script
