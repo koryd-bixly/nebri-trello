@@ -1,5 +1,3 @@
-# this is just to test some utils i made.........
-
 from trello_utils import boardid_to_cardmodels, json_cards_from_board, card_json_to_model
 from trello import TrelloClient
 import logging
@@ -24,17 +22,17 @@ class trello_test_utils(NebriOS):
             )
             
         boards = client.list_boards()
-#        boardid_to_cardmodels(boards[-1].id, client)
-        cards = json_cards_from_board(boards[-1].id, client)
-        for idx, card in enumerate(cards):
-            if idx > 10:
-                break
+        boardid_to_cardmodels(boards[-1].id, client)
+        # cards = json_cards_from_board(boards[-1].id, client)
+        # for idx, card in enumerate(cards):
+        #     if idx > 10:
+        #         break
+        #
+        #     cardout, _ = card_json_to_model(card)
+        #     logging.info('here is this cards info')
+        #     logging.info(str(cardout.duedate))
+        #     logging.info(str(cardout.checklist_finished))
 
-            cardout, _ = card_json_to_model(card)
-            logging.info('here is this cards info')
-            logging.info(str(cardout.duedate))
-            logging.info(str(cardout.checklist_finished))
-            
 #        for b in boards[-1]:
 #            boardid_to_cardmodels(b.id, client)
             

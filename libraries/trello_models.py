@@ -12,17 +12,19 @@ class TrelloCard(NebriOSModel):
     idLabels = NebriOSField()
     idChecklists = NebriOSField()
     idList = NebriOSField()
+    idMemberCreator = NebriOSField()
 
     checklists = NebriOSField()
     due = NebriOSField()
     name = NebriOSField()
 
+    overdue_notice_sent = NebriOSField(default=False)
     card_json = NebriOSField()
 
     @property
     def duedate(self):
         # strptime to get datetime
-        duedate =  None
+        duedate = None
 
         try:
             duedate = datetime.strptime(self.due, '%Y-%m-%dT%H:%M:%S.%fZ')

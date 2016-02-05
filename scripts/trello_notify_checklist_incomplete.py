@@ -1,5 +1,5 @@
 from trello_models import Webhook, TrelloCard, TrelloUserInfo
-from trello_utils import unarchive_card
+from trello_utils import unarchive_card, get_card_creator
 
 class trello_notify_checklist_incomplete(NebriOS):
     import logging
@@ -20,6 +20,7 @@ class trello_notify_checklist_incomplete(NebriOS):
         # self.logging.debug(self.board_admins)
 
         if len(self.card_data['idMembers']) == 0:
+            creator_id = get_card_creator(self.card_data['id'], params={'last_actor': self.last_actor})
             trello_user = TrelloUserInfo.get(trello_id=card.idMemberCreator)
             send_email(trello_user.email, """
             Hello, A card has been archived which was not approved by a board admin. It has

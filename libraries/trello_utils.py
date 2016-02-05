@@ -121,6 +121,7 @@ def _get_trello_token(user):
         raise Exception('Token does not exist. Please supply one on the Trello OAuth Token Creation card or run trello_webhook_setup.')
     return ""
 
+
 def _get_client(user):
     token = _get_trello_token(user)
     try:
@@ -128,3 +129,28 @@ def _get_client(user):
     except:
         raise Exception('API key or secret is missing. Please supply values in shared KVPs.')
     return None
+
+
+def get_card_creator(idcard, client=None, params=None):
+    # gets the idmemberCreator needed EVERYWHERE and should be returned already.
+    if client is None:
+        try:
+            client = _get_client(params['last_actor'])
+            params = None
+        except Exception as e:
+            raise Exception('Could not get client: %s' % str(e))
+    if params is None:
+        param = dict(fields='idMemberCreator')
+
+    try:
+        response = client.fetch_json(
+            'cards/{id}/actions'.format(id=idcard),
+            query_params=params
+        )
+    except Exception as e:
+        logging.error(str(e))
+        creator = None
+    else:
+        creator = response.get('idMemberCreator')
+
+    return creator
