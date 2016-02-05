@@ -6,7 +6,7 @@ import json
 from trello import TrelloClient
 
 from trello_models import Webhook, TrelloUserInfo, TrelloCard
-from trello_utils import card_json_to_model, boardid_to_cardmodels
+from trello_utils import card_json_to_model, setup_webhooks, get_client
 
 
 # logging.basicConfig(filename='trello_webhook_module.log', level=logging.DEBUG)
@@ -46,15 +46,6 @@ def oauth_token(request):
     return '200 LOL'
 
 
-def setup_webhooks(user):
-    client = _get_client(user)
-    for board in client.list_boards():
-        boardid_to_cardmodels(board, client)
-    p = Process.objects.create()
-    p.load_trello_email_card = True
-    p.save()
-
-
 def callback(request):
     send_email('briem@bixly.com', 'received webhook %s\n%s' % (request.GET['id'], request.BODY))
     logging.debug('webhook received!')
@@ -62,7 +53,7 @@ def callback(request):
     logging.debug('api callback request.BODY: %s' %request.BODY)
     logging.debug('what in the world')
     webhook = Webhook.get(model_id=request.GET['id'])
-    client = _get_client(request.GET['user'])
+    client = get_client(request.GET['user'])
     comment_data = None
     card_json = None
     if request.BODY['action']['type'] == 'updateCard' or request.BODY['action']['type'] == 'createCard':
@@ -165,7 +156,7 @@ def _update_card(action, action_type, action_data, card_json):
     if list_data is None and 'listAfter' in action_data:
         list_data = action_data['listAfter']
         moved = True
-        if list_data['name'] == DONE_LIST_NAME and 'listBefore' in action_data:            
+        if list_data['name'] == DONE_LIST_NAME and 'listBefore' in action_data:
             closed = True
     if list_data is None:
         list_data = last_action['list']
@@ -224,7 +215,7 @@ def _update_card(action, action_type, action_data, card_json):
     else:
         local_card.card_is_due = False
     if list_data['name'] == DONE_LIST_NAME:
-        local_card.card_due = None        
+        local_card.card_due = None
     local_card.card_json = card_json
     local_card.save()
 

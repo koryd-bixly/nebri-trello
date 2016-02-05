@@ -14,6 +14,7 @@ class trello_checklist_due_soon(NebriOS):
     listens_to = ['trello_checklist_due_soon']
 
     def check(self):
+        logging.info('THIS IS A TEST')
         if self.trello_checklist_due_soon == True:
             now = datetime.now()
             soon = now + timedelta(hours=4)
@@ -21,7 +22,7 @@ class trello_checklist_due_soon(NebriOS):
             # get all cards with checklists
             cards = [
                 card for card in TrelloCard.all() if card.idMembers and
-                card.checklist_finished is False and card.duedate and
+                card.checklist_finished is False and card.duedate is not None and
                 now <= card.duedate <= soon
                 ]
             self.soondue_cards = soondue_cards
@@ -32,6 +33,7 @@ class trello_checklist_due_soon(NebriOS):
 
 
     def action(self):
+        self.trello_checklist_due_soon = 'RAN: ' + datetime.now()
 
         member_list = []
         for card in self.soondue_cards:

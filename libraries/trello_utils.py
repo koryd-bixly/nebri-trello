@@ -6,7 +6,7 @@ import logging
 logging.basicConfig(filename='trello_utils.log', level=logging.DEBUG)
 
 
-def boardid_to_cardmodels(idboard, client):
+def boardid_to_cardmodels(idboard, client=None, user=None):
     # pass a board id to get all the card models created or updated.
     cards = json_cards_from_board(idboard, client)
     members = json_members_from_board(idboard, client)
@@ -68,13 +68,22 @@ def card_json_to_model(card):
 
 
 def member_json_to_model(member):
-    member_obj, new = TrelloUserInfo.get_or_create(trello_id=member.get('id'))
+    try:
+        member_obj = TrelloUserInfo.get(trello_id=member.get('id'))
+    except Process.DoesNotExist:
+        logging.debug('create new.....')
+        member_obj = TrelloUserInfo(trello_id=member.get('id'))
+    except Exception as e:
+        logging.debug(str(e))
+        if len(TrelloUserInfo.filter(trello_id=member.get('id'))) > 1:
+            member_obj = TrelloUserInfo.filter(trello_id=member.get('id'))[-1]
+            TrelloUserInfo.filter(trello_id=member.get('id')).delete()
 
     member_obj.trello_username = member.get('username')
     member_obj.trello_fullname = member.get('fullName')
     member_obj.save()
 
-    return member_obj, new
+    return member_obj
 
 
 def create_webhook(idboard, client, hooked_ids=None):
@@ -84,7 +93,7 @@ def create_webhook(idboard, client, hooked_ids=None):
     if idboard not in hooked_ids:
         board = client.fetch_json('/boards/%s' % idboard)
         hook = {
-            'desc': 'Webhook for card %s' %  board.name,
+            'desc': 'Webhook for card %s' %  board.get('name'),
             'callback_url': '%s/api/v1/trello_webhook/callback?id=%s' %(INSTANCE_HTTPS_URL, idboard),
             'id_model': idboard,
             'type_model': 'board'
@@ -104,7 +113,7 @@ def create_webhook(idboard, client, hooked_ids=None):
 
 
 def unarchive_card(card_id, last_actor):
-    client = _get_client(last_actor)
+    client = get_client(last_actor)
     if client != None:
         trello_card = client.get_card(card_id)
         try:
@@ -123,7 +132,7 @@ def _get_trello_token(user):
     return ""
 
 
-def _get_client(user):
+def get_client(user):
     token = _get_trello_token(user)
     try:
         return TrelloClient(api_key=shared.TRELLO_API_KEY, api_secret=shared.TRELLO_API_SECRET, token=token)
@@ -136,7 +145,7 @@ def get_card_creator(idcard, client=None, params=None):
     # gets the idmemberCreator needed EVERYWHERE and should be returned already.
     if client is None:
         try:
-            client = _get_client(params['last_actor'])
+            client = get_client(params['last_actor'])
             params = None
         except Exception as e:
             raise Exception('Could not get client: %s' % str(e))
@@ -157,33 +166,49 @@ def get_card_creator(idcard, client=None, params=None):
 
 
 def delete_hooks(user, hook_id=None):
-    client = _get_client(user)
-    if hook_id is None:
-        # we delete them  all!
-        hooked_ids = [h.get('idModel') for h in client.fetch_json('/members/me/tokens?webhooks=true') if h.get('idModel')]
-        logging.debug('delete all the hooks!')
-        for hook in hooked_ids:
+    try:
+        client = get_client(user)
+        if hook_id is None:
+            # we delete them  all!
+            hooked_ids = [h.get('idModel') for h in client.fetch_json('/members/me/tokens?webhooks=true') if h.get('idModel')]
+            logging.debug('delete all the hooks!')
+            for hook in hooked_ids:
+                try:
+                    client.fetch_json(
+                        '/webhooks/%s' % hook,
+                        http_method='DELETE'
+                    )
+                except Exception as e:
+                    logging.debug(str(e))
+                    return str(e)
+        else:
+            logging.debug('delete just one hook')
             try:
                 client.fetch_json(
-                    '/webhooks/%s' % hook,
+                    '/webhooks/%s' % hook_id,
                     http_method='DELETE'
                 )
-                webhook = Webhook.get(trello_id=hook)
-                webhook.delete()
             except Exception as e:
-                logging.debug(str(e))
+                logging.error(str(e))
                 return str(e)
+
+        hooked_ids = [h.get('idModel') for h in client.fetch_json('/members/me/tokens?webhooks=true') if h.get('idModel')]
+        webhooks = Webhook.filter()
+        for hook in webhooks:
+            if hook.trello_id not in hooked_ids:
+                hook.delete()
         return True
-    else:
-        logging.debug('delete just one hook')
-        try:
-            client.fetch_json(
-                '/webhooks/%s' % hook_id,
-                http_method='DELETE'
-            )
-            webhook = Webhook.get(trello_id=hook_id)
-            webhook.delete()
-        except Exception as e:
-            logging.error(str(e))
-            return str(e)
-        return True
+    except Exception as e:
+        return str(e)
+
+
+def setup_webhooks(user):
+    try:
+        client = get_client(user)
+        for board in client.list_boards():
+            boardid_to_cardmodels(board.id, client)
+        p = Process.objects.create()
+        p.load_trello_email_card = True
+        p.save()
+    except Exception as e:
+        logging.debug(str(e))
