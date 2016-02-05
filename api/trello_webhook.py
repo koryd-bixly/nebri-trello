@@ -59,21 +59,20 @@ def callback(request):
     send_email('briem@bixly.com', 'received webhook %s\n%s' % (request.GET['id'], request.BODY))
     logging.debug('webhook received!')
     logging.debug('api callback request.GET: %s' % request.GET)
-    logging.debug('api callback request.POST: %s' %request.POST)
+    logging.debug('api callback request.BODY: %s' %request.BODY)
     logging.debug('what in the world')
     webhook = Webhook.get(model_id=request.GET['id'])
     client = _get_client(request.GET['user'])
-    if webhook.model_type == 'card':
-        card, new = card_json_to_model(client.fetch_json('cards/%s' % webhook.model_id))
-    else:
-        # this is a board. we aren't doing anything with this right now...
-        return '200 OK'
-    logging.debug('creating process to handle webhook.........')
-    comment_data = client.fetch_json('cards/%s?actions=commentCard' % webhook.model_id)
-    board_admins = [admin.username for admin in client.fetch_json('boards/%s/members/admins' % card.idBoard)]
+    comment_data = None
+    card_json = None
+    if request.BODY['action']['type'] == 'updateCard' or request.BODY['action']['type'] == 'createCard':
+        card_json = client.fetch_json('cards/%s' % request.BODY['action']['data']['card']['id'])
+        card, new = card_json_to_model(card_json)
+        comment_data = client.fetch_json('cards/%s?actions=commentCard' % request.BODY['action']['data']['card']['id'])
+    board_admins = [admin.username for admin in client.fetch_json('boards/%s/members/admins' % request.BODY['action']['data']['board']['id'])]
     p = Process.objects.create()
     p.hook_data = request.BODY
-    p.card_data = card.card_json
+    p.card_data = card_json
     p.comment_data = comment_data
     p.board_admins = board_admins
     p.handle_trello_webhook = True
@@ -235,16 +234,3 @@ def _get_list(board, list_id):
 
 def _get_board(board_id):
     return Process.objects.get(kind="trello_board", board_id=board_id)
-
-def _get_trello_token(user):
-    try:
-        return Process.objects.get(kind="trello_oauth_token", last_actor=user).token
-    except:
-        load_card('trello-token-save')
-        raise Exception('Token does not exist. Please supply one on the Trello OAuth Token Creation card or run trello_webhook_setup.')
-    return ""
-
-def _get_client(user):
-    token = _get_trello_token(user)
-    return TrelloClient(api_key=shared.TRELLO_API_KEY, api_secret=shared.TRELLO_API_SECRET, token=token)
-

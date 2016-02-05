@@ -1,5 +1,6 @@
 from trello_models import TrelloCard, Webhook, TrelloUserInfo
 from instance_settings import INSTANCE_HTTPS_URL
+from trello import TrelloClient
 import logging
 
 logging.basicConfig(filename='trello_utils.log', level=logging.DEBUG)
@@ -15,9 +16,10 @@ def boardid_to_cardmodels(idboard, client):
         if h.get('idModel')
         ]
 
+    create_webhook(idboard, client, hooked_ids=hooked_ids)
+
     for card in cards:
         card_json_to_model(card)
-        create_webhook(card, client, hooked_ids=hooked_ids)
 
     for member in members:
         member_json_to_model(member)
@@ -74,16 +76,17 @@ def member_json_to_model(member):
     return member_obj, new
 
 
-def create_webhook(card, client, hooked_ids=None):
+def create_webhook(idboard, client, hooked_ids=None):
     if hooked_ids is None:
         hooked_ids = [h.get('idModel') for h in client.fetch_json('/members/me/tokens?webhooks=true') if h.get('idModel')]
-    if card.get('id') not in hooked_ids:
-        card_name = card.get('name').decode("utf-8", "replace")
+
+    if idboard not in hooked_ids:
+        board = client.fetch_json('/boards/%s' % idboard)
         hook = {
-            'desc': 'Webhook for card %s' %  card_name,
-            'callback_url': '%s/api/v1/trello_webhook/callback?id=%s' %(INSTANCE_HTTPS_URL, card.get('id')),
-            'id_model': card.get('id'),
-            'type_model': 'card'
+            'desc': 'Webhook for card %s' %  board.name,
+            'callback_url': '%s/api/v1/trello_webhook/callback?id=%s' %(INSTANCE_HTTPS_URL, idboard),
+            'id_model': idboard,
+            'type_model': 'board'
         }
 
         webhook = client.create_hook(hook['callback_url'], hook['id_model'], desc=hook['desc'])
@@ -96,4 +99,32 @@ def create_webhook(card, client, hooked_ids=None):
                 trello_id=webhook.id
             )
             new_hook.save()
-            hooked_ids.append(card.get('id'))
+            hooked_ids.append(idboard)
+
+
+def unarchive_card(card_id, last_actor):
+    client = _get_client(last_actor)
+    if client != None:
+        trello_card = client.get_card(card_id)
+        try:
+            trello_card.set_closed(False)
+            return True
+        except Exception as e:
+            return 'error: %s' % str(e)
+
+
+def _get_trello_token(user):
+    try:
+        return Process.objects.get(kind="trello_oauth_token", last_actor=user).token
+    except:
+        load_card('trello-token-save')
+        raise Exception('Token does not exist. Please supply one on the Trello OAuth Token Creation card or run trello_webhook_setup.')
+    return ""
+
+def _get_client(user):
+    token = _get_trello_token(user)
+    try:
+        return TrelloClient(api_key=shared.TRELLO_API_KEY, api_secret=shared.TRELLO_API_SECRET, token=token)
+    except:
+        raise Exception('API key or secret is missing. Please supply values in shared KVPs.')
+    return None

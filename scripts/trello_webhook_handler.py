@@ -18,22 +18,22 @@ class trello_webhook_handler(NebriOS):
         # self.logging.debug(self.comment_data)
         # self.logging.debug(self.board_admins)
 
-        card = TrelloCard.get(idcard=self.card_data.get('id'))
-        # self.logging.debug(card)
-
         if self.hook_data['action']['data']['type'] == 'updateCard' && self.hook_data['model']['closed'] == True:
             # card has been archived. check for rule prerequisites
+
+            card = TrelloCard.get(idcard=self.card_data.get('id'))
             # let's check checklists first
             if card.checklist_finished == False:
                 self.notify_checklist_incomplete = True
                 self.save()
 
             # next let's check for approved status
-            approved_commenter = {}
+            approved_commenter = None
             for action in self.comment_data['actions']:
                 if action['data']['text'] == 'approved':
                     approved_commenter = action['memberCreator']
                     break
-            if approved_commenter['username'] not in self.board_admins:
+            if approved_commenter is None or \
+               approved_commenter['username'] not in self.board_admins:
                 self.handle_unapproved_archived = True
                 self.save()
