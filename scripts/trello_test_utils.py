@@ -1,6 +1,3 @@
-# this is just to test some utils i made....
-#sdaflkasdfklj
-
 from trello_utils import boardid_to_cardmodels, json_cards_from_board, card_json_to_model
 from trello import TrelloClient
 import logging
@@ -35,7 +32,7 @@ class trello_test_utils(NebriOS):
         #     logging.info('here is this cards info')
         #     logging.info(str(cardout.duedate))
         #     logging.info(str(cardout.checklist_finished))
-            
+
 #        for b in boards[-1]:
 #            boardid_to_cardmodels(b.id, client)
             

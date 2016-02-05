@@ -1,4 +1,4 @@
-from trello_models import TrelloCard, TrelloWebhook, TrelloUserInfo
+from trello_models import TrelloCard, Webhook, TrelloUserInfo
 from instance_settings import INSTANCE_HTTPS_URL
 import logging
 
@@ -88,7 +88,7 @@ def create_webhook(card, client, hooked_ids=None):
 
         webhook = client.create_hook(hook['callback_url'], hook['id_model'], desc=hook['desc'])
         if webhook:  # returns false if it doesn't work
-            new_hook = TrelloWebhook(
+            new_hook = Webhook(
                 description=hook['desc'],
                 callback=hook['callback_url'],
                 model_id=hook['id_model'],

@@ -1,7 +1,7 @@
 import logging
 from nebriosmodels import NebriOSField, NebriOSModel
 
-logging.basicConfig(filename='trello_models.log', level=logging.INFO)
+logging.basicConfig(filename='trello_models.log', level=logging.DEBUG)
 
 
 class TrelloCard(NebriOSModel):
@@ -18,7 +18,6 @@ class TrelloCard(NebriOSModel):
     name = NebriOSField()
 
     overdue_notice_sent = NebriOSField(default=False)
-
     card_json = NebriOSField()
 
     @property
@@ -51,7 +50,7 @@ class TrelloCard(NebriOSModel):
             return None
 
 
-class TrelloWebhook(NebriOSModel):
+class Webhook(NebriOSModel):
     user = NebriOSField(required=True)
     description = NebriOSField(required=True)
     callback = NebriOSField(required=True)
