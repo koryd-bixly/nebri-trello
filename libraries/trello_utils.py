@@ -2,6 +2,7 @@ from trello_models import TrelloCard, Webhook, TrelloUserInfo
 from instance_settings import INSTANCE_HTTPS_URL
 from trello import TrelloClient
 import logging
+import requests
 
 logging.basicConfig(filename='trello_utils.log', level=logging.DEBUG)
 
@@ -154,3 +155,26 @@ def get_card_creator(idcard, client=None, params=None):
         creator = response.get('idMemberCreator')
 
     return creator
+
+
+def delete_hooks(user, hook_id=None):
+    client = _get_client(user)
+    if hook_id is None:
+        # we delete them  all!
+        hooked_ids = [h.get('idModel') for h in client.fetch_json('/members/me/tokens?webhooks=true') if h.get('idModel')]
+        for hook in hooked_ids:
+            try:
+                requests.delete('/webhooks/%s' % hook)
+                webhook = Webhook.get(trello_id=hook)
+                webhook.delete()
+            except Exception as e:
+                logging.error(str(e))
+        return True
+    else:
+        try:
+            requests.delete('/webhooks/%s' % hook_id)
+            webhook = Webhook.get(trello_id=hook_id)
+            webhook.delete()
+        except Exception as e:
+            logging.error(str(e))
+        return True
