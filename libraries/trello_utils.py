@@ -60,6 +60,7 @@ def card_json_to_model(card):
     card_obj.checklists = card.get('checklists')
     card_obj.due = card.get('due')
     card_obj.name = card.get('name')
+    card_obj.shortUrl = card.get('shortUrl')
     card_obj.card_json = card
     card_obj.save()
 

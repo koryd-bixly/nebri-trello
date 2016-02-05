@@ -17,6 +17,7 @@ class TrelloCard(NebriOSModel):
     checklists = NebriOSField()
     due = NebriOSField()
     name = NebriOSField()
+    shortUrl = NebriOSField(default='')
 
     overdue_notice_sent = NebriOSField(default=False)
     card_json = NebriOSField()
