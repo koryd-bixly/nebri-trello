@@ -10,13 +10,6 @@ def boardid_to_cardmodels(idboard, client=None, user=None):
     # pass a board id to get all the card models created or updated.
     cards = json_cards_from_board(idboard, client)
     members = json_members_from_board(idboard, client)
-    hooked_ids = [
-        h.get('idModel') for h in
-        client.fetch_json('/members/me/tokens?webhooks=true')
-        if h.get('idModel')
-        ]
-
-    create_webhook(idboard, client, hooked_ids=hooked_ids)
 
     for card in cards:
         card_json_to_model(card)
@@ -86,30 +79,35 @@ def member_json_to_model(member):
     return member_obj
 
 
-def create_webhook(idboard, client, hooked_ids=None):
-    if hooked_ids is None:
-        hooked_ids = [h.get('idModel') for h in client.fetch_json('/members/me/tokens?webhooks=true') if h.get('idModel')]
-
-    if idboard not in hooked_ids:
-        board = client.fetch_json('/boards/%s' % idboard)
-        hook = {
-            'desc': 'Webhook for card %s' %  board.get('name'),
-            'callback_url': '%s/api/v1/trello_webhook/callback?id=%s' %(INSTANCE_HTTPS_URL, idboard),
-            'id_model': idboard,
-            'type_model': 'board'
-        }
-
-        webhook = client.create_hook(hook['callback_url'], hook['id_model'], desc=hook['desc'])
-        if webhook:  # returns false if it doesn't work
-            new_hook = Webhook(
-                description=hook['desc'],
-                callback=hook['callback_url'],
-                model_id=hook['id_model'],
-                model_type=hook['type_model'],
-                trello_id=webhook.id
-            )
-            new_hook.save()
-            hooked_ids.append(idboard)
+def create_webhook(idboard, client, user):
+    board = client.fetch_json('/boards/%s' % idboard)
+    hook = {
+        'desc': 'Webhook for board %s' %  board.get('name'),
+        'callback_url': '%s/api/v1/trello_webhook/callback?user=%s&id=%s' %(INSTANCE_HTTPS_URL, user, idboard),
+        'id_model': idboard,
+        'type_model': 'board'
+    }
+    new_hook = Webhook(
+        user=user,
+        description=hook['desc'],
+        callback=hook['callback_url'],
+        model_id=hook['id_model'],
+        model_type=hook['type_model']
+    )
+    new_hook.save()
+    logging.info(new_hook)
+    webhook = client.create_hook(hook['callback_url'], hook['id_model'], desc=hook['desc'])
+    logging.info(webhook)
+    if webhook is False:
+        # an error occurred during webhook creation. let's try manual creation.
+        data = {'callbackURL': hook['callback_url'], 'idModel': hook['id_model'],
+                'description': hook['desc']}
+        webhook = client.fetch_json('/webhooks', http_method='POST', post_args=data)
+        logging.info(webhook)
+        new_hook.trello_id = webhook['id']
+    else:
+        new_hook.trello_id = webhook.id
+    new_hook.save()
 
 
 def unarchive_card(card_id, last_actor):
@@ -126,7 +124,8 @@ def unarchive_card(card_id, last_actor):
 def _get_trello_token(user):
     try:
         return Process.objects.get(kind="trello_oauth_token", user=user).token
-    except:
+    except Exception as e:
+        logging.debug('ERROR: %s' %str(e))
         load_card('trello-token-save')
         raise Exception('Token does not exist. Please supply one on the Trello OAuth Token Creation card or run trello_webhook_setup.')
     return ""
@@ -136,7 +135,8 @@ def get_client(user):
     token = _get_trello_token(user)
     try:
         return TrelloClient(api_key=shared.TRELLO_API_KEY, api_secret=shared.TRELLO_API_SECRET, token=token)
-    except:
+    except Exception as e:
+        logging.debug(str(e))
         raise Exception('API key or secret is missing. Please supply values in shared KVPs.')
     return None
 
@@ -150,7 +150,7 @@ def get_card_creator(idcard, client=None, params=None):
         except Exception as e:
             raise Exception('Could not get client: %s' % str(e))
     if params is None:
-        params = dict(fields='idMemberCreator')
+        params = dict(filter='createCard')
     try:
         response = client.fetch_json(
             'cards/{id}/actions'.format(id=idcard),
@@ -160,7 +160,9 @@ def get_card_creator(idcard, client=None, params=None):
         logging.error(str(e))
         creator = None
     else:
-        creator = response.get('idMemberCreator')
+        if len(response) == 0:
+            return None
+        creator = response[-1].get('idMemberCreator')
 
     return creator
 
@@ -204,8 +206,23 @@ def delete_hooks(user, hook_id=None):
 
 def setup_webhooks(user):
     try:
+        logging.info('get client')
         client = get_client(user)
+        hook_apps = client.fetch_json('/members/me/tokens?webhooks=true')
+        nebri_hooks = [hook for hook in hook_apps if hook['identifier'] == 'nebrios'][0]
+        logging.info(nebri_hooks)
+        hooked_ids = [
+            hook.get('idModel') for hook in
+            nebri_hooks['webhooks']
+            if hook.get('idModel')
+            ]
+        logging.info(hooked_ids)
         for board in client.list_boards():
+            logging.info('handling board %s' % board.id)
+            if board.id not in hooked_ids:
+                logging.info('create webhook for board')
+                create_webhook(board.id, client, user)
+            logging.info('begin parsing card info')
             boardid_to_cardmodels(board.id, client)
         p = Process.objects.create()
         p.load_trello_email_card = True

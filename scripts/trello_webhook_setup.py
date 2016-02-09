@@ -1,7 +1,4 @@
 class trello_webhook_setup(NebriOS):
-    import logging
-
-    logging.basicConfig(filename='Trello_webhook_setup.log', level=logging.DEBUG)
 
     listens_to = ['trello_webhook_setup']
 
@@ -31,7 +28,6 @@ class trello_webhook_setup(NebriOS):
             if self.trello_api_key is not None:
                 shared.TRELLO_API_KEY = self.trello_api_key
             else:
-                self.logging.debug('No API key found')
                 raise Exception('Trello API key does not exist. Please supply one.')
         else:
             self.trello_api_key = shared.TRELLO_API_KEY
@@ -39,7 +35,6 @@ class trello_webhook_setup(NebriOS):
             if self.trello_api_secret is not None:
                 shared.TRELLO_API_SECRET = self.trello_api_secret
             else:
-                self.logging.debug('No API Secret found')
                 raise Exception('Trello API secret does not exist. Please supply one.')
         shared.PAST_DUE_NOTIFY_ADDRESS = self.past_due_notify_address
         shared.COMPLETED_NOTIFY_ADDRESS = self.completed_notify_address
@@ -49,8 +44,7 @@ class trello_webhook_setup(NebriOS):
         try:
             p = Process.objects.get(user=self.last_actor, kind="trello_oauth_token")
             self.trello_token = p.token
-            self.logging.debug('token updated')
         except:
             # no token yet, let's load the card.
-            self.logging.debug('Need to reauth for token.')
+            pass
         load_card('trello-token-save')

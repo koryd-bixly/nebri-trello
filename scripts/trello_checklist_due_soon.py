@@ -1,11 +1,8 @@
 import logging
-from collections import defaultdict
-# 8
+# 9
 logging.basicConfig(filename='trello_checklist_due_soon.log', level=logging.INFO)
 
 from trello_models import TrelloCard, TrelloUserInfo
-from trello_utils import get_card_creator
-from trello import TrelloClient
 
 class trello_checklist_due_soon(NebriOS):
     '''
@@ -15,27 +12,8 @@ class trello_checklist_due_soon(NebriOS):
 
     def check(self):
         logging.info('THIS IS A TEST')
-        run = False
         if self.trello_checklist_due_soon == True:
-            now = datetime.now() - timedelta(days=4)
-            soon = now + timedelta(hours=24)
-            all_cards = TrelloCard.filter()
-
-            # See if there are any cards that have checklists
-            self.num_cards = len(all_cards)
-            logging.info('number of cards: {}'.format(self.num_cards))
-            for card in all_cards:
-                if card.idMembers is not None and \
-                                card.checklist_finished is not None and \
-                                card.duedate is not None:
-                    logging.info('card date: {}'.format(card.due))
-                    logging.info('checklsit finished: {}'.format(card.checklist_finished))
-
-                    if now <= card.duedate <= soon and card.checklist_finished is False:
-                        run = True
-                        break
-
-            return False
+            return self.get_cards(check_only=True)
         else:
             return False
 
@@ -44,20 +22,7 @@ class trello_checklist_due_soon(NebriOS):
         self.trello_checklist_due_soon = 'RAN: ' + str(datetime.now())
         logging.info('running action: ' + str(datetime.now()))
 
-        now = datetime.now() - timedelta(days=4)
-        soon = now + timedelta(hours=24)
-        soondue_cards = []
-        all_cards = TrelloCard.filter()
-        for card in all_cards:
-                if card.idMembers is not None and \
-                                card.checklist_finished is not None and \
-                                card.duedate is not None:
-
-                    if now <= card.duedate <= soon and card.checklist_finished is False:
-                        logging.info('card date: {}'.format(card.due))
-                        soondue_cards.append(card)
-
-        user_not_found = []
+        soondue_cards = self.get_cards(check_only=False)
         logging.info('soon due cards: {}'.format(len(soondue_cards)))
         for card in soondue_cards:
             logging.info('card members: {}'.format(card.idMembers))
@@ -93,6 +58,35 @@ class trello_checklist_due_soon(NebriOS):
 
         logging.info('Action Finished...')
 
-
     def get_cards(self, check_only=True):
-        
+        now = datetime.now()
+        soon = now + timedelta(hours=6)
+        all_cards = TrelloCard.filter()
+
+        check_ok = False
+        cards = []
+
+        # See if there are any cards that have checklists
+        self.num_cards = len(all_cards)
+        logging.info('number of cards: {}'.format(self.num_cards))
+        for card in all_cards:
+            if card.idMembers is not None and \
+                            card.checklist_finished is not None and \
+                            card.duedate is not None:
+                logging.info('card date: {}'.format(card.due))
+                logging.info('checklsit finished: {}'.format(card.checklist_finished))
+
+                if now <= card.duedate <= soon and card.checklist_finished is False:
+                    check_ok = True
+                    if check_only:
+                        return check_ok
+                    else:
+                        cards.append(card)
+
+        if check_only:
+            return check_ok
+        else:
+            return cards
+
+
+

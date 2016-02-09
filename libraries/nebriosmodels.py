@@ -377,6 +377,23 @@ class NebriOSModel(object):
         q = Process.objects.filter(**kwargs)
         return [cls(PROCESS=p) for p in q]
 
+    @classmethod
+    def exclude(cls, **kwargs):
+        # set the kind kvp so we can filter by model in our Processes
+        kwargs['kind'] = cls.kind
+        kwargs = cleanup_search_kwargs(cls, kwargs)
+        q = Process.objects.exclude(**kwargs)
+        return [cls(PROCESS=p) for p in q]
+
+    @classmethod
+    def count(cls):
+        # set the kind kvp so we can filter by model in our Processes
+        kwargs['kind'] = cls.kind
+        kwargs = cleanup_search_kwargs(cls, kwargs)
+        q = Process.objects.filter(**kwargs).count()
+        if q is None:
+            return 0
+        return int(q)
 
     def __str__(self):
         return "<%s id %s>" % (self.__class__.__name__, self.process().PROCESS_ID)
