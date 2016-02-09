@@ -27,6 +27,8 @@ class TrelloCard(NebriOSModel):
         # strptime to get datetime
         duedate = None
 
+        if self.due is None or self.due == '':
+            return None
         try:
             duedate = datetime.strptime(self.due, '%Y-%m-%dT%H:%M:%S.%fZ')
         except Exception as e:

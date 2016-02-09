@@ -150,7 +150,7 @@ def get_card_creator(idcard, client=None, params=None):
         except Exception as e:
             raise Exception('Could not get client: %s' % str(e))
     if params is None:
-        param = dict(fields='idMemberCreator')
+        params = dict(fields='idMemberCreator')
     try:
         response = client.fetch_json(
             'cards/{id}/actions'.format(id=idcard),

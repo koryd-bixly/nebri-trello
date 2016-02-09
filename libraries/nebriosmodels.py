@@ -377,6 +377,7 @@ class NebriOSModel(object):
         q = Process.objects.filter(**kwargs)
         return [cls(PROCESS=p) for p in q]
 
+
     def __str__(self):
         return "<%s id %s>" % (self.__class__.__name__, self.process().PROCESS_ID)
 
