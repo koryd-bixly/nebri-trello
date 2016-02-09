@@ -1,8 +1,9 @@
 import logging
-# 9
+# 10
 logging.basicConfig(filename='trello_checklist_due_soon.log', level=logging.INFO)
 
 from trello_models import TrelloCard, TrelloUserInfo
+from instance_settings import DEFAULT_USER
 
 class trello_checklist_due_soon(NebriOS):
     '''
@@ -13,7 +14,8 @@ class trello_checklist_due_soon(NebriOS):
     def check(self):
         logging.info('THIS IS A TEST')
         if self.trello_checklist_due_soon == True:
-            return self.get_cards(check_only=True)
+            self.check_ok = self.get_cards(check_only=True)
+            return self.check_ok
         else:
             return False
 
@@ -73,9 +75,6 @@ class trello_checklist_due_soon(NebriOS):
             if card.idMembers is not None and \
                             card.checklist_finished is not None and \
                             card.duedate is not None:
-                logging.info('card date: {}'.format(card.due))
-                logging.info('checklsit finished: {}'.format(card.checklist_finished))
-
                 if now <= card.duedate <= soon and card.checklist_finished is False:
                     check_ok = True
                     if check_only:
