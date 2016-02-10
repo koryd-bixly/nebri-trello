@@ -20,6 +20,7 @@ class trello_overdue_cards_notify(NebriOS):
 
     def check(self):
         # look for overdue cards within the last day...
+        self.last_actor = DEFAULT_USER
         logging.info('Starting Check')
         if self.last_actor is None:
             self.last_actor = DEFAULT_USER
@@ -83,7 +84,8 @@ class trello_overdue_cards_notify(NebriOS):
         now = datetime.now()
         check_ok = False
         cards = []
-        all_overdue_cards = TrelloCard.filter(overdue_notice_sent=False)
+        now_seconds = int(now.strftime('%s'))
+        all_overdue_cards = TrelloCard.filter(due_epoch__lte=now_seconds, overdue_notice_sent=False)
         for card in all_overdue_cards:
             if card.duedate is not None:
                 if card.duedate < now:

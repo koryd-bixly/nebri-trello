@@ -55,6 +55,26 @@ def card_json_to_model(card):
     card_obj.name = card.get('name')
     card_obj.shortUrl = card.get('shortUrl')
     card_obj.card_json = card
+    card_obj.closed = card.get('closed', False)
+
+    logging.info(str(card_obj.due))
+
+    if card_obj.due is not None or card_obj.due != '':
+        try:
+            duedate = datetime.strptime(card_obj.due, '%Y-%m-%dT%H:%M:%S.%fZ')
+        except Exception as e:
+            logging.error('TrelloCard date error: ' + str(e))
+        else:
+            card_obj.due_epoch = int(duedate.strftime('%s'))
+            card_obj.due_datetime = duedate
+
+    labels = card.get('labels', [])
+    if labels != []:
+        for label in labels:
+            name = label.get('name')
+            if name == 'template checklist':
+                card_obj.is_template = True
+
     card_obj.save()
 
     return card_obj, new
@@ -229,3 +249,22 @@ def setup_webhooks(user):
         p.save()
     except Exception as e:
         logging.debug(str(e))
+
+
+def template_checklist_parser(card):
+    json_data = card.card_json
+    description = json_data.get('description')
+    out_data = None
+    if description:
+        card_items = {
+                k:v for (k, v) in [
+                out.split('=') for out in description.split('\n')
+                ]}
+        out_data = dict(
+            description=card_items.get('description', ''),
+            board_name=card_items.get('board'),
+            list_name=card_items.get('list'),
+            drip=card_items.get('drip', None),
+            due=card_items.get('due')
+        )
+    return out_data

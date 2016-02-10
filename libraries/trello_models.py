@@ -12,12 +12,19 @@ class TrelloCard(NebriOSModel):
     idLabels = NebriOSField()
     idChecklists = NebriOSField()
     idList = NebriOSField()
-    idMemberCreator = NebriOSField()
+    idMemberCreator = NebriOSField(default=False)
+    closed = NebriOSField(default=False)
+
+    is_template = NebriOSField()
 
     checklists = NebriOSField()
     due = NebriOSField()
+    due_epoch = NebriOSField()
+    due_datetime = NebriOSField()
+
     name = NebriOSField()
     shortUrl = NebriOSField(default='')
+    drip = NebriOSField()
 
     overdue_notice_sent = NebriOSField(required=True, default=False)
     card_json = NebriOSField()
