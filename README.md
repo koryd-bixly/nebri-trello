@@ -43,14 +43,32 @@ Each scenario has it's own rule script to send out notifications or take actions
 
 <strong>Manually Triggering Scripts</strong>
   ```
-  trello_notify_email := completed
+  trello_overdue_cards_notify := True
   ```
-  When the above line is sent via debug mode, the `trello_notify_email` script will be woken up, causing it to find all completed cards and send an email listing all cards completed in the last 24 hours. An email will be sent to the address defined during setup in the `completed_notify_address` KVP.
+  When the above line is sent via debug mode, the `trello_overdue_cards_notify` script will be woken up, causing it to find all overdue cards and send an email listing all cards  and the card creator. An email will be sent to the address defined during setup in the `DEFAULT_USER`.
   
   ```
-  trello_notify_email := due
+  trello_checklist_due_soon := True
   ```
-  When the above line is sent via debug mode, the `trello_notify_email` script will be woken up, causing it to find all cards that were due in the past 24 hours and send an email listing the found cards. An email will be sent to the address defined during setup in the `past_due_notify_address` KVP.
+  When the above line is sent via debug mode, the `trello_checklist_due_soon` script will be woken up, causing it to find all cards that have an unfinished checklist due in the next past 6 hours. An email will be sent to the address defined during setup in the `DEFAULT_USER`.
+
+  ```
+  trello_search_template_checklist := <drip_name>
+  ```
+  When the above line is sent via debug mode, the `trello_search_template_checklist` script will be woken up, causing it to find all cards that have a label named `template checklist`. This card will be copied to the board and list specified in the description. Here is an example configureation for a template checklist description:
+   ```
+      due=<how long after crated should the new card be due. OPTIONS: day, hour, week, month, quarter, year>
+      board=<board name>
+      list=<list name>
+      drip=<drip name>
+      description=<description on new card>
+   ```
+
+   <strong>NOTE:</strong> do not put spaces between the `=` and the key/value
+
+   The drip paramater above is desgined to allow you to have multiple checklists wake up on the same drip. For example, I could create the 8am drip and all cards with `drip=8am` will be copied when the script wakes up. Remember that drip names must be a string and not start with 'RAN'.
+
+
 
 <strong>Setting Up a Drip</strong>
 
@@ -70,7 +88,7 @@ Drips utilize cron job syntax for when they are run (www.cronmaker.com):
   `schedule` should reflect the cron schedule in the above syntax
   `key/value pairs` should reflect what key/value pairs should be created
   
-  <strong>Example</strong> In order to create a drip to run `trello_notify_email`, to send a list of completed tickets every day at 8am, your drip should look like:
+  <strong>Example</strong> In order to create a drip to run `trello_search_template_checklist`, create new cards from all templates on the 8am drip every day at 8am, your drip should look like:
       
       schedule: 0 8 * * *
-      key/value pairs: trello_notify_email := completed
+      key/value pairs: trello_search_template_checklist := 8am
