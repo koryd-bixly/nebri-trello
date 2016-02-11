@@ -7,7 +7,7 @@ from instance_settings import DEFAULT_USER
 # 17
 
 
-class trello_search_template_checklist_new(NebriOS):
+class trello_search_template_checklist(NebriOS):
     listens_to = ['trello_search_template_checklist']
 
     def check(self):

@@ -12,7 +12,7 @@ class trello_webhook_handler(NebriOS):
     def action(self):
         self.handle_trello_webhook = "Ran"
         logging.debug('handle new trello webhook')
-        if self.hook_data['action']['type'] == 'updateCard' and self.hook_data['action']['data']['card']['closed'] == True:
+        if self.hook_data['action']['type'] == 'updateCard' and self.hook_data['action']['data']['card'].get('closed', False):
             # card has been archived. check for rule prerequisites
             logging.debug('this card was archived!')
             card = TrelloCard.get(idCard=self.card_data.get('id'))

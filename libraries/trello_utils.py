@@ -40,7 +40,17 @@ def card_json_to_model(card):
 
     logging.info('card list is next: ')
     logging.info(str(card))
-    card_obj, new = TrelloCard.get_or_create(idCard=card.get('id'))
+    # card_obj, new = TrelloCard.get_or_create(idCard=card.get('id'))
+    try:
+        card_obj = TrelloCard.get(idCard=card.get('id'))
+    except Process.DoesNotExist:
+        logging.debug('create new.....')
+        card_obj = TrelloCard(idCard=card.get('id'))
+    except Exception as e:
+        logging.debug(str(e))
+        if len(TrelloCard.filter(idCard=card.get('id'))) > 1:
+            card_obj = TrelloCard.filter(idCard=card.get('id'))[-1]
+            TrelloCard.filter(idCard=card.get('id')).delete()
 
     # update card
 
