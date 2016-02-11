@@ -4,30 +4,42 @@ Trello Webhook App for NebriOS
 This app is intended for use in a NebriOS instance. Visit https://nebrios.com to sign up for free!
 
 <h4>Setup</h4>
-Please ensure that all files are placed in the correct places over SFTP.
-  - `trello_handle_card_archived`, `trello_handle_card_deleted.py`, `trello_notify_email.py`, `trello_watch_boards_for_user.py` and `trello_webhook_steup.py` should be copied to /scripts
-  - `trello_webhook.py` should be copied to /api
-  - `trello-token-save.html` should be copied to /card_html_files
-
-Once all files are properly uploaded, this app needs to be set up from debug mode.
-
+Please setup an instance_settings.py file in your libraries with the following information:
+   ```
+      INSTANCE_NAME = <instance_name>
+      INSTANCE_FQDN = <instance_fully_qualified_domain_name>
+      INSTANCE_HTTP_URL = <instance_http_url>
+      INSTANCE_HTTPS_URL = <instance_https_url>
+      INSTANCE_SSH_IP = <instance_ssh_ip>
+      INSTANCE_SSH_PORT = <instance_ssh_port>
+      DEFAULT_USER = <your_email>
+   ```
+Please ensure that all files are placed in the correct places over SFTP. For example, all scripts should go to the /script directory on your instance.
 If this is the first time setting up these webhooks, a trello api key/secret pair will need to be supplied. This pair can be acquired at https://trello.com/1/appkey/generate. You must be logged in to trello to generate an app key/secret pair.
+You can set the shared KVPs in debug mode as follows:
   ```
-  trello_webhook_setup := True
-  trello_api_key := <api_key>
-  trello_api_secret := <api_secret>
-  instance_name := <instance_name>
-  past_due_notify_address := <past_due_notify_email_address>
-  completed_notify_address := <completed_notify_email_address>
+  shared.trello_api_key := <api_key>
+  shared.trello_api_secret := <api_secret>
   ```
+
+Once all files are properly uploaded, this app needs to be set up from debug mode. Make sure that the subject line is clear in Debug mode and input the following:
+    ```
+    trello_webhook_setup := True
+    ```
+
 This will trigger a card load with a link to follow that will provide you with a token generated with your app key/secret. The generated token will be stored for future use.
 
-Once you submit the card, setup is complete. At this point, data will automatically be received from trello based on events that happen on the user's boards and will update appropriate KVPs accordingly.
+Once you submit the card, setup is complete. At this point, data will automatically be received from trello based on events that happen on the user's boards and will update appropriate KVPs accordingly. The initial webhook registration can take some time, so please be patient.
+
+Currenty this app supports only one user per instance. If you need to remove an old user, input the following:
+    ```
+    trello_delete_webhooks_for_user := True
+    ```
 
 <h4>Usage</h4>
-There are a few different ticket scenarios that are currently covered by this app: notifications when a ticket is completed, notifications when a ticket has become past due, and notifications for when a card has been archived.
+There are a few different ticket scenarios that are currently covered by this app: automatically posting a template checklist to a board, notifications when  checklist is about to be due,  notifications when a card has become past due, and notifications for when a card has been archived.
 
-Each scenario has it's own rule script to send out notifications. These rule scripts can be triggered manually for testing, or can be set up to run on a drip schedule.
+Each scenario has it's own rule script to send out notifications or take actions. These rule scripts can be triggered manually for testing, or can be set up to run on a drip schedule.
 
 <strong>Manually Triggering Scripts</strong>
   ```
