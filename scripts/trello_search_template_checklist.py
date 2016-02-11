@@ -40,7 +40,7 @@ class trello_search_template_checklist(NebriOS):
     def get_or_check_cards(self, check_only=True):
 
         # TODO put in exclusions
-        all_cards = TrelloCard.filter()
+        all_cards = TrelloCard.filter(is_template=True)
         cards = []
         check_ok = False
 

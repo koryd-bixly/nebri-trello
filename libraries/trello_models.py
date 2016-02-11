@@ -15,7 +15,9 @@ class TrelloCard(NebriOSModel):
     idMemberCreator = NebriOSField(default=False)
     closed = NebriOSField(default=False)
 
-    is_template = NebriOSField()
+    is_template = NebriOSField(default=False)
+    template_idBoard = NebriOSField()
+    template_idList = NebriOSField()
 
     checklists = NebriOSField()
     due = NebriOSField()

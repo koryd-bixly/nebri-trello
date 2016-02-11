@@ -18,11 +18,12 @@ class trello_move_card(NebriOS):
 
     def check(self):
         logging.debug('starting check')
+        return False
         if not self.trello_move_card.startswith('RAN'):
             return True
 
     def action(self):
-        self.trello_move_card = 'RAN' + str(datetime.now())
+        self.trello_move_card = 'RAN :' + str(datetime.now())
         logging.debug('start action')
 
         template_cards = TrelloCard.filter(drip=self.trello_move_card)

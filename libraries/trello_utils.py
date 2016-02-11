@@ -52,10 +52,16 @@ def card_json_to_model(card):
     card_obj.idList = card.get('idLists')
     card_obj.checklists = card.get('checklists')
     card_obj.due = card.get('due')
+    card_obj.due_epoch = None
+    card_obj.due_datetime = None
     card_obj.name = card.get('name')
     card_obj.shortUrl = card.get('shortUrl')
     card_obj.card_json = card
     card_obj.closed = card.get('closed', False)
+    card_obj.is_template = False
+    card_obj.template_idBoard = None
+    card_obj.template_idList = None
+    card_obj.drip = None
 
     logging.info(str(card_obj.due))
 
@@ -74,6 +80,8 @@ def card_json_to_model(card):
             name = label.get('name')
             if name == 'template checklist':
                 card_obj.is_template = True
+                card_items = template_checklist_parser(card_obj)
+                card_obj.drip = card_items.get('drip')
 
     card_obj.save()
 
@@ -253,8 +261,18 @@ def setup_webhooks(user):
 
 def template_checklist_parser(card):
     json_data = card.card_json
-    description = json_data.get('description')
+    description = json_data.get('desc')
     out_data = None
+    now = datetime.now()
+
+    PREBUILT = dict(
+    hour=timedelta(hours=1),
+    day=timedelta(days=1),
+    week=timedelta(weeks=1),
+    month=timedelta(days=30),
+    quarter=timedelta(weeks=16),
+    year=timedelta(days=365)
+)
     if description:
         card_items = {
                 k:v for (k, v) in [
@@ -265,6 +283,83 @@ def template_checklist_parser(card):
             board_name=card_items.get('board'),
             list_name=card_items.get('list'),
             drip=card_items.get('drip', None),
-            due=card_items.get('due')
+            due=card_items.get('due', 'day'),
+            due_next=now + PREBUILT.get(card_items.get('due', 'day'))
         )
     return out_data
+
+def template_checklist_setup(card, client):
+    card_items = template_checklist_parser(card)
+    if card_items is None:
+        return card
+
+    if card.template_idList is not None and card.template_idBoard is not None:
+        return card
+    board_name = card_items.get('board_name')
+    list_name = card_items.get('list_name')
+
+    if board_name is not None and list_name is not None:
+
+        all_boards = client.fetch_json('/members/me/boards/',
+                                       query_params={'fields': "name, id"})
+        board = None
+        for b in all_boards:
+            if b.get('name') == card_items.get('board_name'):
+                board = client.get_board(b.get('id'))
+                card.template_idBoard = b.get('id')
+                logging.debug('board id: ' + str(board))
+                break
+
+        # get correct list.
+        if board is not None:
+            for blist in board.open_lists():
+                if blist.name == list_name:
+                    card.template_idList = blist.id
+                    break
+
+    if card.template_idBoard is None or card.template_idList is None:
+        card.template_idBoard = card.idBoard
+        card.template_idList = card.idList
+
+    card.save()
+
+    return card
+
+
+def copy_template_card(client, card, name=None, card_items=None):
+        """Add a card to this list
+
+        :name: name for the card
+        :desc: the description of the card
+        :labels: a list of label IDs to be added
+        :due: due date for the card
+        :source: card ID from which to clone from
+        :return: the card
+        """
+
+
+        if card_items is None:
+            card_items = template_checklist_parser(card)
+            if card_items is None:
+                return None
+
+        if name is None:
+            name = 'Finish By: {}'.format(card_items.get('due_next', ''))
+
+        description = card_items.get('description', '')
+        due = str(card_items.get('due_next', ''))
+        labels = ''
+
+        board = client.get_board(card.template_idBoard)
+        clist = board.get_list(card.template_idList)
+        new = clist.add_card(name, desc=description, labels=[],
+                            due=due, source=card.idCard)
+
+        new.set_pos('top')
+
+        for label in new.labels:
+                if label.name == 'template checklist':
+                    new.remove_label(label)
+                    break
+
+        return new
