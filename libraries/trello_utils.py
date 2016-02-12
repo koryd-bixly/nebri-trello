@@ -40,12 +40,15 @@ def card_json_to_model(card):
 
     logging.info('card list is next: ')
     logging.info(str(card))
+    new = False
     # card_obj, new = TrelloCard.get_or_create(idCard=card.get('id'))
     try:
         card_obj = TrelloCard.get(idCard=card.get('id'))
     except Process.DoesNotExist:
         logging.debug('create new.....')
         card_obj = TrelloCard(idCard=card.get('id'))
+        card_obj.save()
+        new = True
     except Exception as e:
         logging.debug(str(e))
         if len(TrelloCard.filter(idCard=card.get('id'))) > 1:
@@ -77,6 +80,8 @@ def card_json_to_model(card):
 
     if card_obj.due is not None or card_obj.due != '':
         try:
+            # Timezone was set to UTC in the instance. This will make sure that
+            # UTC is always broght in
             duedate = datetime.strptime(card_obj.due, '%Y-%m-%dT%H:%M:%S.%fZ')
         except Exception as e:
             logging.error('TrelloCard date error: ' + str(e))
