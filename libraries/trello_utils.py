@@ -38,6 +38,8 @@ def json_cards_from_board(boardid, client, params=None):
 
 
 def card_json_to_model(card):
+    epoch = '1970-01-01T12:00:00.00+0000'
+    pepoch = iso8601.parse_date(epoch)
 
     logging.info('card list is next: ')
     logging.info(str(card))
@@ -87,6 +89,7 @@ def card_json_to_model(card):
         except Exception as e:
             logging.error('TrelloCard date error: ' + str(e))
         else:
+            # card_obj.due_epoch = (duedate - epoch).total_seconds()
             card_obj.due_epoch = int(duedate.strftime('%s'))
             card_obj.due_datetime = duedate
 

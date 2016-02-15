@@ -81,7 +81,7 @@ class trello_overdue_cards_notify(NebriOS):
         logging.info('Script Finished...')
 
     def get_or_check_cards(self, check_only=True):
-        now = datetime.now()
+        now = datetime.now().to_utc()
         now_seconds = int(now.strftime('%s'))
         all_overdue_cards = TrelloCard.filter(due_epoch__lte=now_seconds, overdue_notice_sent=False)
         if check_only:

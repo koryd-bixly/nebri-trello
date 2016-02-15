@@ -63,7 +63,7 @@ class trello_checklist_due_soon(NebriOS):
         logging.info('Action Finished...')
 
     def get_cards(self, check_only=True):
-        now = datetime.utcnow()
+        now = datetime.now().to_utc()
         soon = now + timedelta(hours=6)
         soon_seconds = int(soon.strftime('%s'))
         now_seconds = int(now.strftime('%s'))
@@ -77,16 +77,17 @@ class trello_checklist_due_soon(NebriOS):
         self.num_cards = len(all_cards)
         logging.info('number of cards: {}'.format(self.num_cards))
         for card in all_cards:
-            logging.info('card: {url} {seconds}, {due}'.format(url=card.shortUrl, seconds=card.due_epoch, due=card.due))
+            logging.info('card:{id}  {url} {seconds}, {due}'.format(url=card.shortUrl, seconds=str(card.due_epoch), due=card.due, id=card.idCard))
             if card.idMembers is not None and \
                             card.checklist_finished is not None:
                 logging.info('soon: {soon} --card:{card} -- now: {now}'.format(soon=soon_seconds, now=now_seconds, card=card.due_epoch))
-                if now <= card.due_datetime <= soon and card.checklist_finished is False:
-                    check_ok = True
-                    if check_only:
-                        return check_ok
-                    else:
-                        cards.append(card)
+                if card.due_datetime is not None:
+                    if now <= card.due_datetime <= soon and card.checklist_finished is False:
+                        check_ok = True
+                        if check_only:
+                            return check_ok
+                        else:
+                            cards.append(card)
 
         if check_only:
             return check_ok
