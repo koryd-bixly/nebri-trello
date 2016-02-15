@@ -279,27 +279,35 @@ def template_checklist_parser(card):
     description = json_data.get('desc')
     out_data = None
     now = datetime.now()
-
     PREBUILT = dict(
-    hour=timedelta(hours=1),
-    day=timedelta(days=1),
-    week=timedelta(weeks=1),
-    month=timedelta(days=30),
-    quarter=timedelta(weeks=16),
-    year=timedelta(days=365)
-)
+        hour=timedelta(hours=1),
+        day=timedelta(days=1),
+        week=timedelta(weeks=1),
+        month=timedelta(days=30),
+        quarter=timedelta(weeks=16),
+        year=timedelta(days=365)
+    )
     if description:
         card_items = {
                 k:v for (k, v) in [
                 out.split('=') for out in description.split('\n')
                 ]}
+        due = card_items.get('due', 'day')
+        if due.isdigit():
+            try:
+                intdays = int(due)
+            except:
+                intdays = 1
+            due_next = now + timedelta(days=intdays)
+        else:
+            due_next = now + PREBUILT.get(card_items.get('due', 'day'))
         out_data = dict(
             description=card_items.get('description', ''),
             board_name=card_items.get('board'),
             list_name=card_items.get('list'),
             drip=card_items.get('drip', None),
             due=card_items.get('due', 'day'),
-            due_next=now + PREBUILT.get(card_items.get('due', 'day'))
+            due_next=due_next
         )
     return out_data
 
