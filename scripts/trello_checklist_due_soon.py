@@ -79,10 +79,9 @@ class trello_checklist_due_soon(NebriOS):
         for card in all_cards:
             logging.info('card: {url} {seconds}, {due}'.format(url=card.shortUrl, seconds=card.due_epoch, due=card.due))
             if card.idMembers is not None and \
-                            card.checklist_finished is not None and \
-                            card.duedate is not None:
+                            card.checklist_finished is not None:
                 logging.info('soon: {soon} --card:{card} -- now: {now}'.format(soon=soon_seconds, now=now_seconds, card=card.due_epoch))
-                if now <= card.duedate <= soon and card.checklist_finished is False:
+                if now <= card.due_datetime <= soon and card.checklist_finished is False:
                     check_ok = True
                     if check_only:
                         return check_ok

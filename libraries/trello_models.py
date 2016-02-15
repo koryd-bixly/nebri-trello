@@ -32,21 +32,6 @@ class TrelloCard(NebriOSModel):
     card_json = NebriOSField()
 
     @property
-    def duedate(self):
-        # strptime to get datetime
-        duedate = None
-
-        if self.due is None or self.due == '':
-            return None
-        try:
-            duedate = datetime.strptime(self.due, '%Y-%m-%dT%H:%M:%S.%fZ')
-        except Exception as e:
-            logging.error('TrelloCard date error: ' + str(e))
-
-        return duedate
-
-
-    @property
     def checklist_finished(self):
         if self.checklists:
             all_finished = True

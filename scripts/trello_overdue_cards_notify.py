@@ -82,21 +82,10 @@ class trello_overdue_cards_notify(NebriOS):
 
     def get_or_check_cards(self, check_only=True):
         now = datetime.now()
-        check_ok = False
-        cards = []
         now_seconds = int(now.strftime('%s'))
         all_overdue_cards = TrelloCard.filter(due_epoch__lte=now_seconds, overdue_notice_sent=False)
-        for card in all_overdue_cards:
-            if card.duedate is not None:
-                if card.duedate < now:
-                    if check_only:
-                        # there is at least one card that we can use
-                        check_ok = True
-                        return check_ok
-                    else:
-                        cards.append(card)
         if check_only:
-            return check_ok
+            return len(all_overdue_cards) > 0
         else:
-            self.card_count = len(cards)
-            return cards
+            return all_overdue_cards
+

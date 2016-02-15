@@ -1,6 +1,7 @@
 from trello_models import TrelloCard, Webhook, TrelloUserInfo
 from instance_settings import INSTANCE_HTTPS_URL
 from trello import TrelloClient
+import iso8601
 import logging
 
 logging.basicConfig(filename='trello_utils.log', level=logging.DEBUG)
@@ -82,7 +83,7 @@ def card_json_to_model(card):
         try:
             # Timezone was set to UTC in the instance. This will make sure that
             # UTC is always broght in
-            duedate = datetime.strptime(card_obj.due, '%Y-%m-%dT%H:%M:%S.%fZ')
+            duedate = iso8601.parse_date(card_obj.due)
         except Exception as e:
             logging.error('TrelloCard date error: ' + str(e))
         else:
