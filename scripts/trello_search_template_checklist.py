@@ -31,8 +31,8 @@ class trello_search_template_checklist(NebriOS):
         logging.info('starting for loop')
         for card in template_cards:
 
-            if self.DEFAULT_USER is None:
-                self.DEFAULT_USER = DEFAULT_USER
+            if self.default_user is None:
+                self.default_user = DEFAULT_USER
 
             p = Process.objects.create()
             p.idCard = card.idCard

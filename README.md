@@ -4,6 +4,12 @@ Trello Webhook App for NebriOS
 This app is intended for use in a NebriOS instance. Visit https://nebrios.com to sign up for free!
 
 <h4>Setup</h4>
+First install requirements:
+
+```
+pip install -r requirements.txt
+```
+
 Please setup an instance_settings.py file in your libraries with the following information:
    ```
       INSTANCE_NAME = <instance_name>

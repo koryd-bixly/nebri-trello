@@ -53,7 +53,8 @@ def callback(request):
         webhook = Webhook.get(model_id=request.GET['id'])
     except Exception as e:
         logging.info('ERROR: %s' % (str(e)))
-    client = get_client(request.GET['user'])
+    user = request.GET['user']
+    client = get_client(user)
     logging.debug(client)
     comment_data = None
     card_json = None
@@ -64,7 +65,7 @@ def callback(request):
         logging.debug('update or create card!')
         card_json = client.fetch_json('cards/%s?checklists=all&' % request.BODY['action']['data']['card']['id'])
         try:
-            card, new = card_json_to_model(card_json)
+            card, new = card_json_to_model(card_json, user)
             logging.debug(card.idMemberCreator)
             if card.idMemberCreator is None:
                 card_creator = get_card_creator(card.idCard, client)

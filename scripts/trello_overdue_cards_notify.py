@@ -11,7 +11,7 @@ from instance_settings import DEFAULT_USER
 class trello_overdue_cards_notify(NebriOS):
     '''
     This script looks for all overdue cards and notifies the creator that
-    they are overdue. If a creator is not found, it warns the last actor.
+    they are overdue. If a creator is not found, it warns the default user.
     cards are marked as the warning as been sent so they will not be renotified
     later.
     '''
@@ -20,14 +20,11 @@ class trello_overdue_cards_notify(NebriOS):
 
     def check(self):
         # look for overdue cards within the last day...
-        self.last_actor = DEFAULT_USER
+        if self.default_user is None:
+            self.default_user = DEFAULT_USER
         logging.info('Starting Check')
-        if self.last_actor is None:
-            self.last_actor = DEFAULT_USER
 
         if self.trello_overdue_cards_notify == True:
-            # self.len_cards = len(TrelloCard.filter(overdue_notice_sent=False))
-            # return False
             self.testcheck = self.get_or_check_cards(check_only=True)
             return self.testcheck
         return False
@@ -40,7 +37,7 @@ class trello_overdue_cards_notify(NebriOS):
         self.due_cards_len = len(overdue_cards)
 
         logging.info('getting client')
-        client = get_client(self.last_actor)
+        client = get_client(self.default_user)
         logging.info('Client found')
         logging.info('client type: {}'.format(type(client)))
         notify_users = defaultdict(list)
@@ -61,7 +58,7 @@ class trello_overdue_cards_notify(NebriOS):
             try:
                 trello_user = TrelloUserInfo.get(trello_id=user)
                 if trello_user.email == '':
-                    to = self.last_actor
+                    to = self.default_user
                 else:
                     to = trello_user.email
                 send_email(to, '{id}  the following cards are '
@@ -72,7 +69,7 @@ class trello_overdue_cards_notify(NebriOS):
             except Exception as e:
                 # if the user is not found, then let the last actor know
                 logging.error(str(e))
-                send_email(self.last_actor, 'could not find user: {}'.format(user))
+                send_email(self.default_user, 'could not find user: {}'.format(user))
 
         # Assuming no issues, disable cards
         for card in overdue_cards:
@@ -88,7 +85,11 @@ class trello_overdue_cards_notify(NebriOS):
             now=now,
             s=now_seconds
         ))
-        all_overdue_cards = TrelloCard.filter(due_epoch__lte=now_seconds, overdue_notice_sent=False)
+        all_overdue_cards = TrelloCard.filter(
+            due_epoch__lte=now_seconds,
+            overdue_notice_sent=False,
+            user=self.default_user
+        )
         if check_only:
             return len(all_overdue_cards) > 0
         else:

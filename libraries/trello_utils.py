@@ -13,7 +13,7 @@ def boardid_to_cardmodels(idboard, client=None, user=None):
     members = json_members_from_board(idboard, client)
 
     for card in cards:
-        card_json_to_model(card)
+        card_json_to_model(card, user)
 
     for member in members:
         member_json_to_model(member)
@@ -37,7 +37,7 @@ def json_cards_from_board(boardid, client, params=None):
     )
 
 
-def card_json_to_model(card):
+def card_json_to_model(card, user):
     epoch = '1970-01-01T12:00:00.00+0000'
     pepoch = iso8601.parse_date(epoch)
 
@@ -46,17 +46,18 @@ def card_json_to_model(card):
     new = False
     # card_obj, new = TrelloCard.get_or_create(idCard=card.get('id'))
     try:
-        card_obj = TrelloCard.get(idCard=card.get('id'))
+        card_obj = TrelloCard.get(idCard=card.get('id'), user=user)
     except Process.DoesNotExist:
         logging.debug('create new.....')
-        card_obj = TrelloCard(idCard=card.get('id'))
+        card_obj = TrelloCard(idCard=card.get('id'), user=user)
         card_obj.save()
         new = True
     except Exception as e:
         logging.debug(str(e))
         if len(TrelloCard.filter(idCard=card.get('id'))) > 1:
-            card_obj = TrelloCard.filter(idCard=card.get('id'))[-1]
-            TrelloCard.filter(idCard=card.get('id')).delete()
+            card_obj = TrelloCard.filter(idCard=card.get('id'), user=user)[-1]
+            TrelloCard.filter(idCard=card.get('id'), user=user).delete()
+            card_obj.save()
 
     # update card
 
@@ -270,7 +271,7 @@ def setup_webhooks(user):
                 logging.info('create webhook for board')
                 create_webhook(board.id, client, user)
             logging.info('begin parsing card info')
-            boardid_to_cardmodels(board.id, client)
+            boardid_to_cardmodels(board.id, client, user)
         p = Process.objects.create()
         p.load_trello_email_card = True
         p.save()
