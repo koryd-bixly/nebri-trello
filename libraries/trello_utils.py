@@ -65,7 +65,7 @@ def card_json_to_model(card):
     card_obj.idMembers = card.get('idMembers')
     card_obj.idLabels = card.get('idLabels')
     card_obj.idChecklists = card.get('idChecklists')
-    card_obj.idList = card.get('idLists')
+    card_obj.idList = card.get('idList')
     card_obj.checklists = card.get('checklists')
     card_obj.due = card.get('due')
     card_obj.due_epoch = None

@@ -50,6 +50,7 @@ class trello_overdue_cards_notify(NebriOS):
                 logging.info('getting card creator: {}'.format(card.idCard))
                 # get card creator if not set in model
                 creator = get_card_creator(card.idCard, client)
+                logging.info('Creator is: {}'.format(creator))
                 if creator is None:
                     continue
                 card.idMemberCreator = creator
@@ -83,6 +84,10 @@ class trello_overdue_cards_notify(NebriOS):
     def get_or_check_cards(self, check_only=True):
         now = datetime.now().to_utc()
         now_seconds = int(now.strftime('%s'))
+        logging.info(' Now: {now}, seconds: {s}'.format(
+            now=now,
+            s=now_seconds
+        ))
         all_overdue_cards = TrelloCard.filter(due_epoch__lte=now_seconds, overdue_notice_sent=False)
         if check_only:
             return len(all_overdue_cards) > 0

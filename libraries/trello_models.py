@@ -6,6 +6,7 @@ logging.basicConfig(filename='trello_models.log', level=logging.DEBUG)
 
 class TrelloCard(NebriOSModel):
 
+    # user = NebriOSField(required=True)
     idCard = NebriOSField(required=True)
     idBoard = NebriOSField()
     idMembers = NebriOSField() # possible reference to
