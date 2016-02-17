@@ -13,7 +13,7 @@ def boardid_to_cardmodels(idboard, client=None, user=None):
     members = json_members_from_board(idboard, client)
 
     for card in cards:
-        card_json_to_model(card)
+        card_json_to_model(card, user)
 
     for member in members:
         member_json_to_model(member)
@@ -37,7 +37,7 @@ def json_cards_from_board(boardid, client, params=None):
     )
 
 
-def card_json_to_model(card):
+def card_json_to_model(card, user):
     epoch = '1970-01-01T12:00:00.00+0000'
     pepoch = iso8601.parse_date(epoch)
 
@@ -46,17 +46,23 @@ def card_json_to_model(card):
     new = False
     # card_obj, new = TrelloCard.get_or_create(idCard=card.get('id'))
     try:
-        card_obj = TrelloCard.get(idCard=card.get('id'))
+        card_obj = TrelloCard.get(idCard=card.get('id'), user=user)
     except Process.DoesNotExist:
         logging.debug('create new.....')
-        card_obj = TrelloCard(idCard=card.get('id'))
+        card_obj = TrelloCard(idCard=card.get('id'), user=user)
         card_obj.save()
         new = True
     except Exception as e:
+        logging.info('error finding too many cards...')
         logging.debug(str(e))
         if len(TrelloCard.filter(idCard=card.get('id'))) > 1:
-            card_obj = TrelloCard.filter(idCard=card.get('id'))[-1]
-            TrelloCard.filter(idCard=card.get('id')).delete()
+            for tcard in TrelloCard.filter(idCard=card.get('id'), user=user):
+                tcard.delete()
+            logging.debug('create new.....')
+            card_obj = TrelloCard(idCard=card.get('id'), user=user)
+            card_obj.save()
+            new = True
+
 
     # update card
 
@@ -81,7 +87,7 @@ def card_json_to_model(card):
 
     logging.info(str(card_obj.due))
 
-    if card_obj.due is not None or card_obj.due != '':
+    if card_obj.due is not None and card_obj.due != '':
         try:
             # Timezone was set to UTC in the instance. This will make sure that
             # UTC is always broght in
@@ -98,9 +104,12 @@ def card_json_to_model(card):
         for label in labels:
             name = label.get('name')
             if name == 'template checklist':
-                card_obj.is_template = True
                 card_items = template_checklist_parser(card_obj)
-                card_obj.drip = card_items.get('drip')
+                if card_items is None:
+                    card_obj.is_template = False
+                else:
+                    card_obj.is_template = True
+                    card_obj.drip = card_items.get('drip')
 
     card_obj.save()
 
@@ -117,7 +126,8 @@ def member_json_to_model(member):
         logging.debug(str(e))
         if len(TrelloUserInfo.filter(trello_id=member.get('id'))) > 1:
             member_obj = TrelloUserInfo.filter(trello_id=member.get('id'))[-1]
-            TrelloUserInfo.filter(trello_id=member.get('id')).delete()
+            for tuser in TrelloUserInfo.filter(trello_id=member.get('id')):
+                tuser.delete()
 
     member_obj.trello_username = member.get('username')
     member_obj.trello_fullname = member.get('fullName')
@@ -270,7 +280,7 @@ def setup_webhooks(user):
                 logging.info('create webhook for board')
                 create_webhook(board.id, client, user)
             logging.info('begin parsing card info')
-            boardid_to_cardmodels(board.id, client)
+            boardid_to_cardmodels(board.id, client, user)
         p = Process.objects.create()
         p.load_trello_email_card = True
         p.save()
@@ -311,7 +321,7 @@ def template_checklist_parser(card):
             list_name=card_items.get('list'),
             drip=card_items.get('drip', None),
             due=card_items.get('due', 'day'),
-            due_next=due_next
+            due_next=due_next.replace(second=0, microsecond=0)
         )
     return out_data
 
@@ -374,6 +384,7 @@ def copy_template_card(client, card, name=None, card_items=None):
             name = 'Finish By: {}'.format(card_items.get('due_next', ''))
 
         description = card_items.get('description', '')
+
         due = str(card_items.get('due_next', ''))
         labels = ''
 

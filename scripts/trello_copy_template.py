@@ -1,5 +1,4 @@
-# 234sdf s2s
-
+# 5
 import logging
 logging.basicConfig(filename='trello_copy_template.log', level=logging.INFO)
 from trello_models import TrelloCard, TrelloUserInfo
@@ -22,9 +21,16 @@ class trello_copy_template(NebriOS):
             self.default_user = DEFAULT_USER
         if self.trello_copy_template == True:
             try:
-                card = TrelloCard.get(idCard=self.idCard)
+                card = TrelloCard.get(
+                    idCard=self.idCard,
+                    is_template=True,
+                    closed=False,
+                    drip=self.drip,
+                    user=self.default_user
+                )
                 logging.info('card found')
             except Exception as e:
+                logging.error('Error in copy template')
                 logging.error(str(e))
                 self.card_get_error = str(e)
                 return False
@@ -39,7 +45,7 @@ class trello_copy_template(NebriOS):
 
         client = get_client(self.default_user)
         logging.info('client found')
-        card = TrelloCard.get(idCard=self.idCard)
+        card = TrelloCard.get(idCard=self.idCard, user=self.default_user)
 
         card = template_checklist_setup(card, client)
         self.template_idList = card.template_idList

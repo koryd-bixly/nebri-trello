@@ -2,11 +2,12 @@ import logging
 from nebriosmodels import NebriOSField, NebriOSModel
 
 logging.basicConfig(filename='trello_models.log', level=logging.DEBUG)
+#  maxBytes=200000
 
 
 class TrelloCard(NebriOSModel):
 
-    # user = NebriOSField(required=True)
+    user = NebriOSField(required=True)
     idCard = NebriOSField(required=True)
     idBoard = NebriOSField()
     idMembers = NebriOSField() # possible reference to

@@ -4,7 +4,7 @@ logging.basicConfig(filename='trello_search_template_checklist.log', level=loggi
 from trello_models import TrelloCard, TrelloUserInfo
 from trello_utils import get_card_creator, get_client, template_checklist_parser
 from instance_settings import DEFAULT_USER
-# 17
+# 25
 
 
 class trello_search_template_checklist(NebriOS):
@@ -22,22 +22,31 @@ class trello_search_template_checklist(NebriOS):
     def action(self):
         self.trello_search_template_checklist = 'RAN: {}'.format(datetime.now())
 
-        template_cards = TrelloCard.filter(is_template=True, closed=False, drip=self.drip)
+        if self.default_user is None:
+                self.default_user = DEFAULT_USER
+
+        template_cards = TrelloCard.filter(is_template=True, closed=False, drip=self.drip, user=self.default_user)
         logging.info('starting action')
         logging.info('card gotten')
 
         self.num_cards = len(template_cards)
 
+        card_ids = []
+
         logging.info('starting for loop')
         for card in template_cards:
+            logging.info('card id: {}'.format(card.idCard))
 
-            if self.DEFAULT_USER is None:
-                self.DEFAULT_USER = DEFAULT_USER
+            if card.idCard in card_ids:
+                continue
 
             p = Process.objects.create()
             p.idCard = card.idCard
+            p.drip = self.drip
             p.trello_copy_template = True
             p.default_user = self.DEFAULT_USER
             p.save()
+
+            card_ids.append(card.idCard)
 
         logging.info('action finished')

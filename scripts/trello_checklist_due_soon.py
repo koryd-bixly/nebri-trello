@@ -12,7 +12,8 @@ class trello_checklist_due_soon(NebriOS):
     listens_to = ['trello_checklist_due_soon']
 
     def check(self):
-        self.last_actor = DEFAULT_USER
+        if self.default_user is None:
+            self.default_user = DEFAULT_USER
         logging.info('THIS IS A TEST')
 
         if self.trello_checklist_due_soon == True:
@@ -37,26 +38,26 @@ class trello_checklist_due_soon(NebriOS):
                     logging.info('trello_member: {}'.format(trello_member))
                 except Exception as e:
                         logging.error(str(e))
-                        send_email(self.last_actor,
+                        send_email(self.default_user,
                                   '''could not find user: ''' + memberid)
                 if trello_member == '' or trello_member is None:
                     logging.info('user not found: {}'.format(memberid))
                     if memberid not in user_not_found:
                         user_not_found.append(memberid)
-                        send_email(self.last_actor,
+                        send_email(self.default_user,
                                    '''could not find user: ''' + memberid)
                         continue
                     if trello_member.email is None or trello_member.email == '':
                         user_not_found.append(memberid)
-                        send_email(self.last_actor,
+                        send_email(self.default_user,
                                    '''could not find user: ''' + memberid)
                         continue
                 member_list.append(trello_member.email)
             logging.info('member list: {}'.format(member_list))
             if member_list:
                 send_email(
-                    self.last_actor,
-                    '''You need to finish this card ''' + str(card.shortUrl),
+                    self.default_user,
+                    '''You need to finish this card ''' + card.shortUrl,
                     'Unfinished checklist (PID:{})'.format(self.PROCESS_ID)
                 )
 
@@ -67,7 +68,7 @@ class trello_checklist_due_soon(NebriOS):
         soon = now + timedelta(hours=6)
         soon_seconds = int(soon.strftime('%s'))
         now_seconds = int(now.strftime('%s'))
-        all_cards = TrelloCard.filter(due_epoch__gte=now_seconds)
+        all_cards = TrelloCard.filter(due_epoch__gte=now_seconds, due_epoch__lte=soon_seconds, user=self.default_user, closed=False)
         logging.info('soon: {soon} --now: {now}'.format(soon=soon_seconds, now=now_seconds))
 
         check_ok = False

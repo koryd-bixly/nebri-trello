@@ -4,6 +4,12 @@ Trello Webhook App for NebriOS
 This app is intended for use in a NebriOS instance. Visit https://nebrios.com to sign up for free!
 
 <h4>Setup</h4>
+First install requirements:
+
+```
+pip install -r requirements.txt
+```
+
 Please setup an instance_settings.py file in your libraries with the following information:
    ```
       INSTANCE_NAME = <instance_name>
@@ -44,6 +50,7 @@ Each scenario has it's own rule script to send out notifications or take actions
 <strong>Manually Triggering Scripts</strong>
   ```
   trello_overdue_cards_notify := True
+  default_user := <your_email>
   ```
   When the above line is sent via debug mode, the `trello_overdue_cards_notify` script will be woken up, causing it to find all overdue cards and send an email listing all cards  and the card creator. An email will be sent to the address defined during setup in the `DEFAULT_USER`.
   
