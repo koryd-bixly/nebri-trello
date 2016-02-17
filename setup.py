@@ -4,7 +4,7 @@ from setuptools.command.install import install as _install
 
 
 def _post_install(dir):
-
+    pass
 
 
 class install(_install):
