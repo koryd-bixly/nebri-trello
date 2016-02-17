@@ -4,14 +4,27 @@ from setuptools.command.install import install as _install
 
 
 def _post_install(dir):
-    pass
+    for (dirpath, dirnames, filenames) in os.walk(dir):
+        if dirpath == dir + 'api':
+            print dirpath, filenames
+            for file in filenames:
+                os.rename('%s/%s' % (dirpath, file), '/home/nebrios-sftp/api/%s' % file)
+        if dirpath == dir + 'card_html_files':
+            for file in filenames:
+                os.rename('%s/%s' % (dirpath, file), '/home/nebrios-sftp/card_html_files/%s' % file)
+        if dirpath == dir + 'libraries':
+            for file in filenames:
+                os.rename('%s/%s' % (dirpath, file), '/home/nebrios-sftp/libraries/%s' % file)
+        if dirpath == dir + 'scripts':
+            for file in filenames:
+                os.rename('%s/%s' % (dirpath, file), '/home/nebrios-sftp/scripts/%s' % file)
 
 
 class install(_install):
     def run(self):
         _install.run(self)
         self.execute(_post_install, (self.install_lib,),
-                     msg="Running post install task %s" % self)
+                     msg="Running post install task %s" % self.install_lib)
 
 setup(
     name='nebri-trello',
