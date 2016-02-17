@@ -15,7 +15,7 @@ class trello_webhook_handler(NebriOS):
         if self.hook_data['action']['type'] == 'updateCard' and self.hook_data['action']['data']['card'].get('closed', False):
             # card has been archived. check for rule prerequisites
             logging.debug('this card was archived!')
-            card = TrelloCard.get(idCard=self.card_data.get('id'))
+            card = TrelloCard.get(idCard=self.card_data.get('id'), user=self.default_user)
             logging.debug(card)
             logging.debug(card.checklist_finished)
             # let's check checklists first

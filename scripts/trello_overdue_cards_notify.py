@@ -5,7 +5,7 @@ from collections import defaultdict
 from trello_models import TrelloCard, TrelloUserInfo
 from trello_utils import get_card_creator, get_client
 from instance_settings import DEFAULT_USER
-# 2
+# 234
 
 
 class trello_overdue_cards_notify(NebriOS):
@@ -83,9 +83,10 @@ class trello_overdue_cards_notify(NebriOS):
         long_ago = datetime.now() - timedelta(days=2)
         now_seconds = int(now.strftime('%s'))
         long_ago_seconds = int(long_ago.strftime('%s'))
-        logging.info(' Now: {now}, seconds: {s}'.format(
+        logging.info(' Now: {now}, seconds: {s}, longago:{ago}'.format(
             now=now,
-            s=now_seconds
+            s=now_seconds,
+            ago=long_ago_seconds
         ))
         all_overdue_cards = TrelloCard.filter(
             due_epoch__lte=now_seconds,

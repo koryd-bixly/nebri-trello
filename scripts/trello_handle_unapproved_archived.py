@@ -11,7 +11,10 @@ class trello_handle_unapproved_archived(NebriOS):
     def action(self):
         self.handle_unapproved_archived = 'Ran'
         hook = Webhook.get(model_id=self.card_data['idBoard'])
-        card = TrelloCard.get(idCard=self.card_data['id'])
+        try:
+            card = TrelloCard.get(idCard=self.card_data['id'], user=self.default_user)
+        except Process.DoesNotExist:
+            return
 
         unarchived = unarchive_card(self.card_data['id'], hook.user)
         if unarchived == True:

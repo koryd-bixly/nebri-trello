@@ -83,6 +83,7 @@ def callback(request):
         p.comment_data = comment_data
         p.board_admins = board_admins
         p.handle_trello_webhook = True
+        p.default_user = user
         p.save()
         logging.debug(p)
     return '200 OK'
