@@ -1,4 +1,19 @@
-from setuptools import setup
+import os, sys
+from distutils.core import setup
+from setuptools.command.install import install as _install
+
+
+def _post_install(dir):
+    from subprocess import call
+    call([sys.executable, 'scriptname.py'],
+         cwd=os.path.join(dir, 'packagename'))
+
+
+class install(_install):
+    def run(self):
+        _install.run(self)
+        self.execute(_post_install, (self.install_lib,),
+                     msg="Running post install task %s" % self.install_lib)
 
 setup(
     name='nebri-trello',
@@ -9,5 +24,6 @@ setup(
     author='koryd-bixly',
     install_requires=[
         'py-trello==0.4.3'
-    ]
+    ],
+    cmdclass={'install': install}
 )
