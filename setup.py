@@ -6,7 +6,6 @@ from setuptools.command.install import install as _install
 def _post_install(dir):
     for (dirpath, dirnames, filenames) in os.walk(dir):
         if dirpath == dir + 'api':
-            print dirpath, filenames
             for file in filenames:
                 os.rename('%s/%s' % (dirpath, file), '/home/nebrios-sftp/api/%s' % file)
         if dirpath == dir + 'card_html_files':
@@ -32,6 +31,8 @@ setup(
     description='nebri-trello is a nebri app to make communicating with and setting up trello webhooks easier.',
     url='https://github.com/koryd-bixly/nebri-trello',
     packages=['api', 'card_html_files', 'libraries', 'scripts'],
+    package_data={'card_html_files': ['*.html']},
+    include_package_data=True,
     author='koryd-bixly',
     install_requires=[
         'py-trello==0.4.3',
