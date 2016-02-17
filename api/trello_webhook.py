@@ -67,7 +67,7 @@ def callback(request):
         try:
             card, new = card_json_to_model(card_json, user)
             logging.debug(card.idMemberCreator)
-            if card.idMemberCreator is None:
+            if card.idMemberCreator is None or card.idMemberCreator is False:
                 card_creator = get_card_creator(card.idCard, client)
                 card.idMemberCreator = card_creator
                 card.save()
