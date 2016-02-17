@@ -31,9 +31,14 @@ class trello_search_template_checklist(NebriOS):
 
         self.num_cards = len(template_cards)
 
+        card_ids = []
+
         logging.info('starting for loop')
         for card in template_cards:
             logging.info('card id: {}'.format(card.idCard))
+
+            if card.idCard in card_ids:
+                continue
 
             p = Process.objects.create()
             p.idCard = card.idCard
@@ -41,5 +46,7 @@ class trello_search_template_checklist(NebriOS):
             p.trello_copy_template = True
             p.default_user = self.DEFAULT_USER
             p.save()
+
+            card_ids.append(card.idCard)
 
         logging.info('action finished')

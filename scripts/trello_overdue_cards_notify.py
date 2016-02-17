@@ -80,13 +80,16 @@ class trello_overdue_cards_notify(NebriOS):
 
     def get_or_check_cards(self, check_only=True):
         now = datetime.now().to_utc()
+        long_ago = datetime.now() - timedelta(days=2)
         now_seconds = int(now.strftime('%s'))
+        long_ago_seconds = int(long_ago.strftime('%s'))
         logging.info(' Now: {now}, seconds: {s}'.format(
             now=now,
             s=now_seconds
         ))
         all_overdue_cards = TrelloCard.filter(
             due_epoch__lte=now_seconds,
+            due_epoch__gte=long_ago_seconds,
             overdue_notice_sent=False,
             user=self.default_user
         )
