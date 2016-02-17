@@ -34,7 +34,8 @@ setup(
     packages=['api', 'card_html_files', 'libraries', 'scripts'],
     author='koryd-bixly',
     install_requires=[
-        'py-trello==0.4.3'
+        'py-trello==0.4.3',
+        'iso8601==0.1.11'
     ],
     cmdclass={'install': install}
 )
