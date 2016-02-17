@@ -57,7 +57,7 @@ class trello_checklist_due_soon(NebriOS):
             if member_list:
                 send_email(
                     self.default_user,
-                    '''You need to finish this card ''' + str(card.shortUrl),
+                    '''You need to finish this card ''' + card.shortUrl,
                     'Unfinished checklist (PID:{})'.format(self.PROCESS_ID)
                 )
 
@@ -68,7 +68,7 @@ class trello_checklist_due_soon(NebriOS):
         soon = now + timedelta(hours=6)
         soon_seconds = int(soon.strftime('%s'))
         now_seconds = int(now.strftime('%s'))
-        all_cards = TrelloCard.filter(due_epoch__gte=now_seconds, user=self.default_user)
+        all_cards = TrelloCard.filter(due_epoch__gte=now_seconds, due_epoch__lte=soon_seconds, user=self.default_user, closed=False)
         logging.info('soon: {soon} --now: {now}'.format(soon=soon_seconds, now=now_seconds))
 
         check_ok = False

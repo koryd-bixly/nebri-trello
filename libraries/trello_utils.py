@@ -53,11 +53,16 @@ def card_json_to_model(card, user):
         card_obj.save()
         new = True
     except Exception as e:
+        logging.info('error finding too many cards...')
         logging.debug(str(e))
         if len(TrelloCard.filter(idCard=card.get('id'))) > 1:
-            card_obj = TrelloCard.filter(idCard=card.get('id'), user=user)[-1]
-            TrelloCard.filter(idCard=card.get('id'), user=user).delete()
+            for tcard in TrelloCard.filter(idCard=card.get('id'), user=user):
+                tcard.delete()
+            logging.debug('create new.....')
+            card_obj = TrelloCard(idCard=card.get('id'), user=user)
             card_obj.save()
+            new = True
+
 
     # update card
 
@@ -82,7 +87,7 @@ def card_json_to_model(card, user):
 
     logging.info(str(card_obj.due))
 
-    if card_obj.due is not None or card_obj.due != '':
+    if card_obj.due is not None and card_obj.due != '':
         try:
             # Timezone was set to UTC in the instance. This will make sure that
             # UTC is always broght in
@@ -118,7 +123,8 @@ def member_json_to_model(member):
         logging.debug(str(e))
         if len(TrelloUserInfo.filter(trello_id=member.get('id'))) > 1:
             member_obj = TrelloUserInfo.filter(trello_id=member.get('id'))[-1]
-            TrelloUserInfo.filter(trello_id=member.get('id')).delete()
+            for tuser in TrelloUserInfo.filter(trello_id=member.get('id')):
+                tuser.delete()
 
     member_obj.trello_username = member.get('username')
     member_obj.trello_fullname = member.get('fullName')
@@ -312,7 +318,7 @@ def template_checklist_parser(card):
             list_name=card_items.get('list'),
             drip=card_items.get('drip', None),
             due=card_items.get('due', 'day'),
-            due_next=due_next
+            due_next=due_next.replace(second=0, microsecond=0)
         )
     return out_data
 
@@ -375,6 +381,7 @@ def copy_template_card(client, card, name=None, card_items=None):
             name = 'Finish By: {}'.format(card_items.get('due_next', ''))
 
         description = card_items.get('description', '')
+
         due = str(card_items.get('due_next', ''))
         labels = ''
 

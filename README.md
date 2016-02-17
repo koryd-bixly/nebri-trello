@@ -50,6 +50,7 @@ Each scenario has it's own rule script to send out notifications or take actions
 <strong>Manually Triggering Scripts</strong>
   ```
   trello_overdue_cards_notify := True
+  default_user := <your_email>
   ```
   When the above line is sent via debug mode, the `trello_overdue_cards_notify` script will be woken up, causing it to find all overdue cards and send an email listing all cards  and the card creator. An email will be sent to the address defined during setup in the `DEFAULT_USER`.
   
