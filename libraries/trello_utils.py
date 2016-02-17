@@ -104,9 +104,12 @@ def card_json_to_model(card, user):
         for label in labels:
             name = label.get('name')
             if name == 'template checklist':
-                card_obj.is_template = True
                 card_items = template_checklist_parser(card_obj)
-                card_obj.drip = card_items.get('drip')
+                if card_items is None:
+                    card_obj.is_template = False
+                else:
+                    card_obj.is_template = True
+                    card_obj.drip = card_items.get('drip')
 
     card_obj.save()
 
