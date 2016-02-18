@@ -31,16 +31,17 @@ def json_cards_from_board(boardid, client, params=None):
         params = dict(
             checklists='all'
         )
-    return client.fetch_json(
+    return (
+        card for card in client.fetch_json(
         'boards/{id}/cards/'.format(id=boardid),
         query_params=params
     )
-
+    )
 
 def card_json_to_model(card, user):
 
     logging.info('card list is next: ')
-    logging.info(str(card))
+    # logging.info(str(card))
     new = False
     # card_obj, new = TrelloCard.get_or_create(idCard=card.get('id'))
     try:
