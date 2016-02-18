@@ -87,6 +87,9 @@ def card_json_to_model(card, user):
 
     logging.info(str(card_obj.due))
 
+    if card_obj.idMemberCreator is False:
+        card_obj.idMemberCreator = None
+
     if card_obj.due is not None and card_obj.due != '':
         try:
             # Timezone was set to UTC in the instance. This will make sure that
