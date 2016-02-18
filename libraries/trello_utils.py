@@ -239,6 +239,7 @@ def get_card_creator(idcard, client=None, params=None):
 
 
 def delete_hooks(user, hook_id=None):
+    error = None
     try:
         client = get_client(user)
         if hook_id is None:
@@ -266,13 +267,26 @@ def delete_hooks(user, hook_id=None):
                 return str(e)
 
         hooked_ids = [h.get('idModel') for h in client.fetch_json('/members/me/tokens?webhooks=true') if h.get('idModel')]
-        webhooks = Webhook.filter()
+        webhooks = Webhook.filter(user=user)
+        cards = TrelloCard.filter(user=user)
+        hooks_deleted = 0
         for hook in webhooks:
             if hook.trello_id not in hooked_ids:
                 hook.delete()
-        return True
+                hooks_deleted += 1
+        cards_deleted = 0
+        for card in cards:
+            card.delete()
+            cards_deleted += 1
     except Exception as e:
-        return str(e)
+        error = str(e)
+    p = Process.objects.create()
+    p.hooks_deleted = hooks_deleted
+    p.cards_deleted = cards_deleted
+    p.error = error
+    p.save()
+    if hooks_deleted > 0 or cards_deleted > 0:
+        load_card('trello-webhook-delete-done', pid=p.PROCESS_ID)
 
 
 def setup_webhooks(user):
