@@ -1,5 +1,5 @@
 from trello_models import TrelloCard, Webhook, TrelloUserInfo
-from instance_settings import INSTANCE_HTTPS_URL
+from instance_settings import INSTANCE_HTTPS_URL, INSTANCE_NAME
 from trello import TrelloClient
 import iso8601
 import logging
@@ -222,7 +222,11 @@ def get_card_creator(idcard, client=None, params=None):
     else:
         if len(response) == 0:
             return None
-        creator = response[-1].get('idMemberCreator')
+        creator = None
+        for action in response[::-1]:
+            creator = action.get('idMemberCreator')
+            if creator is not None:
+                break
 
     return creator
 
@@ -319,7 +323,7 @@ def template_checklist_parser(card):
         else:
             due_next = now + PREBUILT.get(card_items.get('due', 'day'))
         out_data = dict(
-            description=card_items.get('description', ''),
+            description=card_items.get('description', '') + ' --created on : {}'.format(INSTANCE_NAME),
             board_name=card_items.get('board'),
             list_name=card_items.get('list'),
             drip=card_items.get('drip', None),
@@ -348,7 +352,10 @@ def template_checklist_setup(card, client):
                 board = client.get_board(b.get('id'))
                 card.template_idBoard = b.get('id')
                 logging.debug('board id: ' + str(board))
-                break
+                for blist in board.open_lists():
+                    if blist.name == list_name:
+                        card.template_idList = blist.id
+                        break
 
         # get correct list.
         if board is not None:
