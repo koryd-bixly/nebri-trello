@@ -1,0 +1,20 @@
+<dom-module id="trello-webhook-setup-complete">
+    <template>
+        <template is="dom-if" if="{{!kvps.error}}">
+            <h2>Trello Webhook Setup Has Completed</h2>
+            Congrats! We've successfully set up webhooks for your Trello boards and have imported any cards your user has
+            access to. We've also imported members of your board. Please take a moment to fill in emails. :)
+        </template>
+        <template is="dom-if" if="{{kvps.error}}">
+            <h2>Oops...</h2>
+            We've hit a snag while setting up webhooks...<br>
+            <span>{{kvps.error}}</span>
+        </template>
+    </template>
+    <script>
+        Polymer({
+            is: "trello-webhook-setup-complete",
+            behaviors: [NebriElement]
+        });
+    </script>
+</dom-module>

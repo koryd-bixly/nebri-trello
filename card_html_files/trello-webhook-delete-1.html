@@ -1,0 +1,21 @@
+<dom-module id="trello-webhook-delete-complete">
+    <template>
+        <template is="dom-if" if="{{kvps.error}}">
+            <h2>Oops...</h2>
+            We've hit a snag during deletion...<br>
+            <span>{{kvps.error}}</span>
+        </template>
+        <template is="dom-if" if="{{!kvps.error}}">
+            <h2>Trello Webhook Deletion Has Completed</h2>
+            Congrats! We've successfully your Trello webhooks. :)
+        </template>
+        Deleted <span>{{kvps.hooks_deleted}}</span> webhooks
+        Deleted <span>{{kvps.cards_deleted}}</span> cards
+    </template>
+    <script>
+        Polymer({
+            is: "trello-webhook-delete-complete",
+            behaviors: [NebriElement]
+        });
+    </script>
+</dom-module>

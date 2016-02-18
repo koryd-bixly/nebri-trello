@@ -86,8 +86,8 @@ def card_json_to_model(card, user):
 
     logging.info(str(card_obj.due))
 
-    if card_obj.idMemberCreator is False:
-        card_obj.idMemberCreator = None
+    if card_obj.idMemberCreator is False or card_obj.idMemberCreator is None:
+        card_obj.idMemberCreator = get_card_creator(card_obj.idCard, params={'last_actor': user})
 
     if card_obj.due is not None and card_obj.due != '':
         try:
@@ -284,8 +284,8 @@ def delete_hooks(user, hook_id=None):
     p.cards_deleted = cards_deleted
     p.error = error
     p.save()
-    if hooks_deleted > 0 or cards_deleted > 0:
-        load_card('trello-webhook-delete-done', pid=p.PROCESS_ID)
+    if hooks_deleted > 0 or cards_deleted > 0 or error is not None:
+        load_card('trello-webhook-delete-complete', pid=p.PROCESS_ID)
 
 
 def setup_webhooks(user):
