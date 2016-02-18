@@ -1,16 +1,16 @@
-import logging
 import pytz
 import traceback
 import json
-
 from trello import TrelloClient
 
 from trello_models import Webhook, TrelloUserInfo, TrelloCard
 from trello_utils import card_json_to_model, setup_webhooks, get_client, get_card_creator
 
+import logging
+logging.basicConfig(filename='lololololololol.log', level=logging.DEBUG)
+
 
 # logging.basicConfig(filename='trello_webhook_module.log', level=logging.DEBUG)
-logging.basicConfig(filename='/home/nebrios-script/workspace/lololololololol.log', level=logging.DEBUG)
 
 ACTIONS_FOR_CACHING = ['addAttachmentToCard', 'addChecklistToCard', 'addLabelToCard', 'convertToCardFromCheckItem',
                        'createCard', 'createCheckItem', 'deleteAttachmentFromCard', 'deleteCheckItem',
@@ -67,11 +67,14 @@ def callback(request):
         try:
             card, new = card_json_to_model(card_json, user)
             logging.debug(card.idMemberCreator)
+            logging.info('Card creator: {}'.format(card.idMemberCreator))
             if card.idMemberCreator is None or card.idMemberCreator is False:
                 card_creator = get_card_creator(card.idCard, client)
                 card.idMemberCreator = card_creator
                 card.save()
+            logging.info('Card creator after call: {}'.format(card.idMemberCreator))
         except Exception as e:
+            logging.error('callback error: {}'.format(str(e)))
             logging.debug(str(e))
         comment_data = client.fetch_json('cards/%s?actions=commentCard' % request.BODY['action']['data']['card']['id'])
         logging.debug(comment_data)

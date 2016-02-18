@@ -1,7 +1,7 @@
 import logging
 from nebriosmodels import NebriOSField, NebriOSModel
 
-logging.basicConfig(filename='trello_models.log', level=logging.DEBUG)
+logging.basicConfig(filename='trello_models.log', level=logging.INFO)
 #  maxBytes=200000
 
 

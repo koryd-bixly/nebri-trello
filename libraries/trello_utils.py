@@ -2,9 +2,9 @@ from trello_models import TrelloCard, Webhook, TrelloUserInfo
 from instance_settings import INSTANCE_HTTPS_URL, INSTANCE_NAME
 from trello import TrelloClient
 import iso8601
-import logging
 
-logging.basicConfig(filename='trello_utils.log', level=logging.DEBUG)
+import logging
+logging.basicConfig(filename='trello_utils.log', level=logging.INFO)
 
 
 def boardid_to_cardmodels(idboard, client=None, user=None):
@@ -203,6 +203,8 @@ def get_client(user):
 
 def get_card_creator(idcard, client=None, params=None):
     # gets the idmemberCreator needed EVERYWHERE and should be returned already.
+    logging.info('Searching for card creator...')
+    logging.info('client is : {}'.format(type(client)))
     if client is None:
         try:
             client = get_client(params['last_actor'])
@@ -210,20 +212,25 @@ def get_card_creator(idcard, client=None, params=None):
         except Exception as e:
             raise Exception('Could not get client: %s' % str(e))
     if params is None:
-        params = dict(filter='createCard')
+        params = dict(filter='all')
     try:
         response = client.fetch_json(
             'cards/{id}/actions'.format(id=idcard),
             query_params=params
         )
+        logging.info('found!')
     except Exception as e:
+        logging.info('there was a problem')
         logging.error(str(e))
         creator = None
     else:
+        logging.info('response: {}'.format(response))
         if len(response) == 0:
             return None
         creator = None
+        logging.info('********** CARD CREATOR SEARCH********')
         for action in response[::-1]:
+            logging.info('card info: {}'.format(action))
             creator = action.get('idMemberCreator')
             if creator is not None:
                 break
