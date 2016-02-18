@@ -25,6 +25,8 @@ class TrelloCard(NebriOSModel):
     due = NebriOSField()
     due_epoch = NebriOSField()
     due_datetime = NebriOSField()
+    dateLastActivity = NebriOSField()
+    created = NebriOSField
 
     name = NebriOSField()
     shortUrl = NebriOSField(default='')

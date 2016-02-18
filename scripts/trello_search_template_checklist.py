@@ -2,7 +2,6 @@ import logging
 logging.basicConfig(filename='trello_search_template_checklist.log', level=logging.INFO)
 
 from trello_models import TrelloCard, TrelloUserInfo
-from trello_utils import get_card_creator, get_client, template_checklist_parser
 from instance_settings import DEFAULT_USER
 # 25
 

@@ -69,8 +69,9 @@ def callback(request):
             logging.debug(card.idMemberCreator)
             logging.info('Card creator: {}'.format(card.idMemberCreator))
             if card.idMemberCreator is None or card.idMemberCreator is False:
-                card_creator = get_card_creator(card.idCard, client)
+                card_creator, date_str = get_card_creator(card.idCard, client)
                 card.idMemberCreator = card_creator
+                card.created = date_str
                 card.save()
             logging.info('Card creator after call: {}'.format(card.idMemberCreator))
         except Exception as e:

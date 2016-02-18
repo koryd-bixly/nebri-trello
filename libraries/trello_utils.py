@@ -38,8 +38,6 @@ def json_cards_from_board(boardid, client, params=None):
 
 
 def card_json_to_model(card, user):
-    epoch = '1970-01-01T12:00:00.00+0000'
-    pepoch = iso8601.parse_date(epoch)
 
     logging.info('card list is next: ')
     logging.info(str(card))
@@ -84,6 +82,7 @@ def card_json_to_model(card, user):
     card_obj.template_idBoard = None
     card_obj.template_idList = None
     card_obj.drip = None
+    card_obj.dateLastActivity = card.get('dateLastActivity')
 
     logging.info(str(card_obj.due))
 
@@ -212,7 +211,7 @@ def get_card_creator(idcard, client=None, params=None):
         except Exception as e:
             raise Exception('Could not get client: %s' % str(e))
     if params is None:
-        params = dict(filter='all')
+        params = dict(filter='copyCard,createCard')
     try:
         response = client.fetch_json(
             'cards/{id}/actions'.format(id=idcard),
@@ -230,12 +229,12 @@ def get_card_creator(idcard, client=None, params=None):
         creator = None
         logging.info('********** CARD CREATOR SEARCH********')
         for action in response[::-1]:
-            logging.info('card info: {}'.format(action))
+            date_str = action.get('date')
             creator = action.get('idMemberCreator')
             if creator is not None:
                 break
 
-    return creator
+    return creator, date_str
 
 
 def delete_hooks(user, hook_id=None):
