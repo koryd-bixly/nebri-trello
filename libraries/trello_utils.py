@@ -1,10 +1,10 @@
 from trello_models import TrelloCard, Webhook, TrelloUserInfo
-from instance_settings import INSTANCE_HTTPS_URL
+from instance_settings import INSTANCE_HTTPS_URL, INSTANCE_NAME
 from trello import TrelloClient
 import iso8601
-import logging
 
-logging.basicConfig(filename='trello_utils.log', level=logging.DEBUG)
+import logging
+logging.basicConfig(filename='trello_utils.log', level=logging.INFO)
 
 
 def boardid_to_cardmodels(idboard, client=None, user=None):
@@ -38,8 +38,6 @@ def json_cards_from_board(boardid, client, params=None):
 
 
 def card_json_to_model(card, user):
-    epoch = '1970-01-01T12:00:00.00+0000'
-    pepoch = iso8601.parse_date(epoch)
 
     logging.info('card list is next: ')
     logging.info(str(card))
@@ -84,6 +82,7 @@ def card_json_to_model(card, user):
     card_obj.template_idBoard = None
     card_obj.template_idList = None
     card_obj.drip = None
+    card_obj.dateLastActivity = card.get('dateLastActivity')
 
     logging.info(str(card_obj.due))
 
@@ -203,6 +202,8 @@ def get_client(user):
 
 def get_card_creator(idcard, client=None, params=None):
     # gets the idmemberCreator needed EVERYWHERE and should be returned already.
+    logging.info('Searching for card creator...')
+    logging.info('client is : {}'.format(type(client)))
     if client is None:
         try:
             client = get_client(params['last_actor'])
@@ -210,21 +211,30 @@ def get_card_creator(idcard, client=None, params=None):
         except Exception as e:
             raise Exception('Could not get client: %s' % str(e))
     if params is None:
-        params = dict(filter='createCard')
+        params = dict(filter='copyCard,createCard')
     try:
         response = client.fetch_json(
             'cards/{id}/actions'.format(id=idcard),
             query_params=params
         )
+        logging.info('found!')
     except Exception as e:
+        logging.info('there was a problem')
         logging.error(str(e))
         creator = None
     else:
+        logging.info('response: {}'.format(response))
         if len(response) == 0:
             return None
-        creator = response[-1].get('idMemberCreator')
+        creator = None
+        logging.info('********** CARD CREATOR SEARCH********')
+        for action in response[::-1]:
+            date_str = action.get('date')
+            creator = action.get('idMemberCreator')
+            if creator is not None:
+                break
 
-    return creator
+    return creator, date_str
 
 
 def delete_hooks(user, hook_id=None):
@@ -333,7 +343,7 @@ def template_checklist_parser(card):
         else:
             due_next = now + PREBUILT.get(card_items.get('due', 'day'))
         out_data = dict(
-            description=card_items.get('description', ''),
+            description=card_items.get('description', '') + ' --created on : {}'.format(INSTANCE_NAME),
             board_name=card_items.get('board'),
             list_name=card_items.get('list'),
             drip=card_items.get('drip', None),
@@ -362,7 +372,10 @@ def template_checklist_setup(card, client):
                 board = client.get_board(b.get('id'))
                 card.template_idBoard = b.get('id')
                 logging.debug('board id: ' + str(board))
-                break
+                for blist in board.open_lists():
+                    if blist.name == list_name:
+                        card.template_idList = blist.id
+                        break
 
         # get correct list.
         if board is not None:

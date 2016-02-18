@@ -46,11 +46,12 @@ class trello_overdue_cards_notify(NebriOS):
             if card.idMemberCreator is None or card.idMemberCreator is False:
                 logging.info('getting card creator: {}'.format(card.idCard))
                 # get card creator if not set in model
-                creator = get_card_creator(card.idCard, client)
+                creator, date_str = get_card_creator(card.idCard, client)
                 logging.info('Creator is: {}'.format(creator))
                 if creator is None:
                     continue
                 card.idMemberCreator = creator
+                card.created = date_str
                 card.save()
             notify_users[card.idMemberCreator].append(card.shortUrl)
 

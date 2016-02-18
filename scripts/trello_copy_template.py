@@ -3,7 +3,7 @@ import logging
 logging.basicConfig(filename='trello_copy_template.log', level=logging.INFO)
 from trello_models import TrelloCard, TrelloUserInfo
 from trello import TrelloClient
-from trello_utils import get_card_creator, get_client, template_checklist_parser, template_checklist_setup, copy_template_card
+from trello_utils import get_client, template_checklist_parser, template_checklist_setup, copy_template_card
 
 from trello_prebuilt import PREBUILT
 from instance_settings import DEFAULT_USER
