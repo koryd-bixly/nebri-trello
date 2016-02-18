@@ -40,7 +40,6 @@ def oauth_token(request):
                 p.trello_watch_boards_for_user = True
                 p.save()
                 logging.debug('saved except')
-            setup_webhooks(user)
     except Exception as e:
         logging.debug(str(e))
     return '200 LOL'
