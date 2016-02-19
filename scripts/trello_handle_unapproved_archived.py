@@ -18,7 +18,7 @@ class trello_handle_unapproved_archived(NebriOS):
 
         unarchived = unarchive_card(self.card_data['id'], hook.user)
         if unarchived == True:
-            trello_user = TrelloUserInfo.get(trello_id=card.idMemberCreator)
+            trello_user = card.creator
             send_email('briem@bixly.com', """
             Hello, A card has been archived which was not approved by a board admin. It has
             been unarchived. Please take a moment to look into this matter. %s Thanks!

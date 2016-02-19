@@ -66,14 +66,15 @@ def callback(request):
         card_json = client.fetch_json('cards/%s?checklists=all&' % request.BODY['action']['data']['card']['id'])
         try:
             card, new = card_json_to_model(card_json, user)
-            logging.debug(card.idMemberCreator)
-            logging.info('Card creator: {}'.format(card.idMemberCreator))
-            if card.idMemberCreator is None or card.idMemberCreator is False:
+            logging.debug(card.creator)
+            logging.info('Card creator: {}'.format(card.creator))
+            if card.creator is None or card.creator is False:
                 card_creator, date_str = get_card_creator(card.idCard, client)
-                card.idMemberCreator = card_creator
+                creator = TrelloUserInfo(trello_id=card_creator)
+                card.creator = creator
                 card.created = date_str
                 card.save()
-            logging.info('Card creator after call: {}'.format(card.idMemberCreator))
+            logging.info('Card creator after call: {}'.format(card.creator))
         except Exception as e:
             logging.error('callback error: {}'.format(str(e)))
             logging.debug(str(e))

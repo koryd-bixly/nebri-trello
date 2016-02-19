@@ -1,8 +1,15 @@
 import logging
-from nebriosmodels import NebriOSField, NebriOSModel
+from nebriosmodels import NebriOSField, NebriOSModel, NebriOSReference, NebriOSReferenceList
 
 logging.basicConfig(filename='trello_models.log', level=logging.INFO)
 #  maxBytes=200000
+
+
+class TrelloUserInfo(NebriOSModel):
+    email = NebriOSField(required=True, default='')
+    trello_id = NebriOSField(required=True)
+    trello_username = NebriOSField(required=True)
+    trello_fullname = NebriOSField(required=True)
 
 
 class TrelloCard(NebriOSModel):
@@ -10,11 +17,11 @@ class TrelloCard(NebriOSModel):
     user = NebriOSField(required=True)
     idCard = NebriOSField(required=True)
     idBoard = NebriOSField()
-    idMembers = NebriOSField() # possible reference to
+    members = NebriOSReferenceList(TrelloUserInfo)
     idLabels = NebriOSField()
     idChecklists = NebriOSField()
     idList = NebriOSField()
-    idMemberCreator = NebriOSField(default=None)
+    creator = NebriOSReference(TrelloUserInfo, default=None)
     closed = NebriOSField(default=False)
 
     is_template = NebriOSField(default=False)
@@ -60,10 +67,3 @@ class Webhook(NebriOSModel):
     model_type = NebriOSField(required=True)
     trello_id = NebriOSField(required=True, default='')
     cards_imported = NebriOSField(required=True, default=False)
-
-
-class TrelloUserInfo(NebriOSModel):
-    email = NebriOSField(required=True, default='')
-    trello_id = NebriOSField(required=True)
-    trello_username = NebriOSField(required=True)
-    trello_fullname = NebriOSField(required=True)
