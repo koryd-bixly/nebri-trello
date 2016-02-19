@@ -31,35 +31,42 @@ class trello_checklist_due_soon(NebriOS):
         logging.info('soon due cards: {}'.format(len(soondue_cards)))
         for card in soondue_cards:
             logging.info('card members: {}'.format(card.idMembers))
-            member_list = []
+            members_not_found = []
             for memberid in card.idMembers:
                 try:
                     trello_member = TrelloUserInfo.get(trello_id=memberid)
                     logging.info('trello_member: {}'.format(trello_member))
                 except Exception as e:
-                        logging.error(str(e))
-                        send_email(self.default_user,
-                                  '''could not find user: ''' + memberid)
-                if trello_member == '' or trello_member is None:
-                    logging.info('user not found: {}'.format(memberid))
-                    if memberid not in user_not_found:
-                        user_not_found.append(memberid)
-                        send_email(self.default_user,
-                                   '''could not find user: ''' + memberid)
-                        continue
-                    if trello_member.email is None or trello_member.email == '':
-                        user_not_found.append(memberid)
-                        send_email(self.default_user,
-                                   '''could not find user: ''' + memberid)
-                        continue
-                member_list.append(trello_member.email)
-            logging.info('member list: {}'.format(member_list))
-            if member_list:
+                    logging.error(str(e))
+                    members_not_found.append(memberid)
+                    continue
+                to = trello_member.email if trello_member.email != '' else 'briem@bixly.com'
                 send_email(
-                    self.default_user,
+                    to,
                     '''You need to finish this card ''' + card.shortUrl,
                     'Unfinished checklist (PID:{})'.format(self.PROCESS_ID)
                 )
+            if len(members_not_found) > 0:
+                send_email(
+                    self.default_user,
+                    'Member ids not found: {}'.format(members_not_found)
+                )
+
+            #     if trello_member == '' or trello_member is None:
+            #         logging.info('user not found: {}'.format(memberid))
+            #         if memberid not in user_not_found:
+            #             user_not_found.append(memberid)
+            #             send_email(self.default_user,
+            #                        '''could not find user: ''' + memberid)
+            #             continue
+            #         if trello_member.email is None or trello_member.email == '':
+            #             user_not_found.append(memberid)
+            #             send_email(self.default_user,
+            #                        '''could not find user: ''' + memberid)
+            #             continue
+            #     member_list.append(trello_member.email)
+            # logging.info('member list: {}'.format(member_list))
+            # if member_list
 
         logging.info('Action Finished...')
 
