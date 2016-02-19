@@ -352,10 +352,14 @@ def template_checklist_parser(card):
         year=timedelta(days=365)
     )
     if description:
-        card_items = {
-                k:v for (k, v) in [
-                out.split('=') for out in description.split('\n')
-                ]}
+        try:
+            card_items = {
+                    k:v for (k, v) in [
+                    out.split('=') for out in description.split('\n')
+                    ]}
+        except Exception as e:
+            logging.error('unable to read card description: {}'.format(e))
+            return None
         due = card_items.get('due', 'day')
         if due.isdigit():
             try:
