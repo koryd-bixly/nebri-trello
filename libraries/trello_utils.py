@@ -14,6 +14,9 @@ def boardid_to_cardmodels(idboard, client=None, user=None):
     cards = json_cards_from_board(idboard, client)
     members = json_members_from_board(idboard, client)
 
+    for member in members:
+        member_json_to_model(member)
+
     for card in cards:
         if card.get('due') is None or card.get('due') == '':
             continue
@@ -21,9 +24,6 @@ def boardid_to_cardmodels(idboard, client=None, user=None):
             continue
         else:
             card_json_to_model(card, user)
-
-    for member in members:
-        member_json_to_model(member)
 
     hook = Webhook.get(model_id=idboard)
     hook.cards_imported = True
@@ -79,7 +79,6 @@ def card_json_to_model(card, user):
 
     # check webhook json response
     card_obj.idBoard = card.get('idBoard')
-    card_obj.idMembers = card.get('idMembers')
     card_obj.idLabels = card.get('idLabels')
     card_obj.idChecklists = card.get('idChecklists')
     card_obj.idList = card.get('idList')
@@ -99,6 +98,12 @@ def card_json_to_model(card, user):
     card_obj.desc = card.get('desc')
 
     logging.info(str(card_obj.due))
+
+    idMembers = card.get('idMembers')
+    members = []
+    for id in idMembers:
+        members.append(TrelloUserInfo.filter(trello_id=id))
+    card_obj.members = members
 
     if card_obj.creator is False or card_obj.creator is None:
         card_obj.creator, _ = get_card_creator(card_obj.idCard, params={'last_actor': user})
