@@ -100,8 +100,8 @@ def card_json_to_model(card, user):
 
     logging.info(str(card_obj.due))
 
-    if card_obj.idMemberCreator is False or card_obj.idMemberCreator is None:
-        card_obj.idMemberCreator, _ = get_card_creator(card_obj.idCard, params={'last_actor': user})
+    if card_obj.creator is False or card_obj.creator is None:
+        card_obj.creator, _ = get_card_creator(card_obj.idCard, params={'last_actor': user})
 
     if card_obj.due is not None and card_obj.due != '':
         try:
