@@ -12,18 +12,14 @@ def boardid_to_cardmodels(idboard, client=None, user=None):
     if client is None:
         client = get_client(user)
     cards = json_cards_from_board(idboard, client)
-    members = json_members_from_board(idboard, client)
 
     for card in cards:
-        if card.get('due') is None or card.get('due') == '':
-            continue
-        elif card.get('labels', []) == []:
-            continue
-        else:
+        if card.get('due') is not None or card.get('labels', []) != []:
             card_json_to_model(card, user)
-
-    for member in members:
-        member_json_to_model(member)
+        # elif card.get('labels', []) == []:
+        #     continue
+        # else:
+        #     card_json_to_model(card, user)
 
     hook = Webhook.get(model_id=idboard)
     hook.cards_imported = True
@@ -101,7 +97,8 @@ def card_json_to_model(card, user):
     logging.info(str(card_obj.due))
 
     if card_obj.creator is False or card_obj.creator is None:
-        card_obj.creator, _ = get_card_creator(card_obj.idCard, params={'last_actor': user})
+        card_creator, _ = get_card_creator(card_obj.idCard, params={'last_actor': user})
+        card_obj.creator = TrelloUserInfo.get(trello_id=card_creator)
 
     if card_obj.due is not None and card_obj.due != '':
         try:
@@ -181,11 +178,6 @@ def create_webhook(idboard, client, user):
     else:
         new_hook.trello_id = webhook.id
     new_hook.save()
-    p = Process.objects.create()
-    p.boardId = idboard
-    p.user = user
-    p.trello_import_cards = True
-    p.save()
 
 
 def unarchive_card(card_id, last_actor):
@@ -319,7 +311,7 @@ def delete_hooks(user, hook_id=None):
     p.error = error
     p.save()
     if hooks_deleted > 0 or cards_deleted > 0 or error is not None:
-        load_card('trello-webhook-delete-complete', pid=p.PROCESS_ID)
+        load_card('trello-webhook-delete-complete', pid=p.PROCESS_ID, user=user)
 
 
 def setup_webhooks(user):
@@ -340,6 +332,23 @@ def setup_webhooks(user):
             if board.id not in hooked_ids:
                 logging.info('create webhook for board')
                 create_webhook(board.id, client, user)
+            members = json_members_from_board(board.id, client)
+
+            for member in members:
+                member_json_to_model(member)
+            logging.info('handling board %s' % board.id)
+            if board.id not in hooked_ids:
+                logging.info('create webhook for board')
+                create_webhook(board.id, client, user)
+            members = json_members_from_board(board.id, client)
+
+            for member in members:
+                member_json_to_model(member)
+        load_card('trello-webhook-setup-complete', user=user)
+        p = Process.objects.create()
+        p.load_trello_email_card = True
+        p.last_actor = user
+        p.save()
     except Exception as e:
         logging.info(str(e))
 
