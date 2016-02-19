@@ -30,10 +30,29 @@ class trello_checklist_due_soon(NebriOS):
         soondue_cards = self.get_cards(check_only=False)
         logging.info('soon due cards: {}'.format(len(soondue_cards)))
         for card in soondue_cards:
-            logging.info('card members: {}'.format(card.members))
+            logging.info('card members: {}'.format(card.idMembers))
             member_list = []
-            for member in card.members:
-                member_list.append(member.email)
+            for memberid in card.idMembers:
+                try:
+                    trello_member = TrelloUserInfo.get(trello_id=memberid)
+                    logging.info('trello_member: {}'.format(trello_member))
+                except Exception as e:
+                        logging.error(str(e))
+                        send_email(self.default_user,
+                                  '''could not find user: ''' + memberid)
+                if trello_member == '' or trello_member is None:
+                    logging.info('user not found: {}'.format(memberid))
+                    if memberid not in user_not_found:
+                        user_not_found.append(memberid)
+                        send_email(self.default_user,
+                                   '''could not find user: ''' + memberid)
+                        continue
+                    if trello_member.email is None or trello_member.email == '':
+                        user_not_found.append(memberid)
+                        send_email(self.default_user,
+                                   '''could not find user: ''' + memberid)
+                        continue
+                member_list.append(trello_member.email)
             logging.info('member list: {}'.format(member_list))
             if member_list:
                 send_email(
@@ -60,7 +79,7 @@ class trello_checklist_due_soon(NebriOS):
         logging.info('number of cards: {}'.format(self.num_cards))
         for card in all_cards:
             logging.info('card:{id}  {url} {seconds}, {due}'.format(url=card.shortUrl, seconds=str(card.due_epoch), due=card.due, id=card.idCard))
-            if card.members is not None and \
+            if card.idMembers is not None and \
                             card.checklist_finished is not None:
                 logging.info('soon: {soon} --card:{card} -- now: {now}'.format(soon=soon_seconds, now=now_seconds, card=card.due_epoch))
                 if card.due_datetime is not None:
