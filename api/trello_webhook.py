@@ -29,14 +29,15 @@ def oauth_token(request):
                 logging.debug('try')
                 p = Process.objects.get(user=request.user, kind="trello_oauth_token")
                 p.token = request.FORM.trello_token
+                p.trello_watch_boards_for_user = True
                 p.save()
                 logging.debug('saved')
             except:
                 logging.debug('except')
                 p = Process.objects.create()
-                p.user=request.user
-                p.kind="trello_oauth_token"
-                p.token=request.FORM.trello_token
+                p.user = request.user
+                p.kind = "trello_oauth_token"
+                p.token = request.FORM.trello_token
                 p.trello_watch_boards_for_user = True
                 p.save()
                 logging.debug('saved except')

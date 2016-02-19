@@ -9,6 +9,8 @@ logging.basicConfig(filename='trello_utils.log', level=logging.INFO)
 
 def boardid_to_cardmodels(idboard, client=None, user=None):
     # pass a board id to get all the card models created or updated.
+    if client is None:
+        client = get_client(user)
     cards = json_cards_from_board(idboard, client)
     members = json_members_from_board(idboard, client)
 
@@ -17,6 +19,10 @@ def boardid_to_cardmodels(idboard, client=None, user=None):
 
     for member in members:
         member_json_to_model(member)
+
+    hook = Webhook.get(model_id=idboard)
+    hook.cards_imported = True
+    hook.save()
 
 
 def json_members_from_board(boardid, client):
@@ -33,10 +39,11 @@ def json_cards_from_board(boardid, client, params=None):
         )
     return (
         card for card in client.fetch_json(
-        'boards/{id}/cards/'.format(id=boardid),
-        query_params=params
+            'boards/{id}/cards/'.format(id=boardid),
+            query_params=params
+        )
     )
-    )
+
 
 def card_json_to_model(card, user):
 
@@ -88,7 +95,7 @@ def card_json_to_model(card, user):
     logging.info(str(card_obj.due))
 
     if card_obj.idMemberCreator is False or card_obj.idMemberCreator is None:
-        card_obj.idMemberCreator = get_card_creator(card_obj.idCard, params={'last_actor': user})
+        card_obj.idMemberCreator, _ = get_card_creator(card_obj.idCard, params={'last_actor': user})
 
     if card_obj.due is not None and card_obj.due != '':
         try:
@@ -168,6 +175,11 @@ def create_webhook(idboard, client, user):
     else:
         new_hook.trello_id = webhook.id
     new_hook.save()
+    p = Process.objects.create()
+    p.boardId = idboard
+    p.user = user
+    p.trello_import_cards = True
+    p.save()
 
 
 def unarchive_card(card_id, last_actor):
@@ -205,6 +217,7 @@ def get_card_creator(idcard, client=None, params=None):
     # gets the idmemberCreator needed EVERYWHERE and should be returned already.
     logging.info('Searching for card creator...')
     logging.info('client is : {}'.format(type(client)))
+    date_str = None
     if client is None:
         try:
             client = get_client(params['last_actor'])
@@ -240,12 +253,20 @@ def get_card_creator(idcard, client=None, params=None):
 
 def delete_hooks(user, hook_id=None):
     error = None
+    logging.info('inside delete_hooks')
     try:
         client = get_client(user)
+        hook_apps = client.fetch_json('/members/me/tokens?webhooks=true')
+        nebri_hooks = [hook for hook in hook_apps if hook['identifier'] == 'nebrios'][0]
+        hooked_ids = [
+            hook.get('id') for hook in
+            nebri_hooks['webhooks']
+            if hook.get('id')
+        ]
         if hook_id is None:
             # we delete them  all!
-            hooked_ids = [h.get('idModel') for h in client.fetch_json('/members/me/tokens?webhooks=true') if h.get('idModel')]
-            logging.debug('delete all the hooks!')
+            logging.info('delete all the hooks!')
+            logging.info(hooked_ids)
             for hook in hooked_ids:
                 try:
                     client.fetch_json(
@@ -253,20 +274,25 @@ def delete_hooks(user, hook_id=None):
                         http_method='DELETE'
                     )
                 except Exception as e:
-                    logging.debug(str(e))
+                    logging.info(str(e))
                     return str(e)
         else:
-            logging.debug('delete just one hook')
+            logging.info('delete just one hook')
             try:
                 client.fetch_json(
                     '/webhooks/%s' % hook_id,
                     http_method='DELETE'
                 )
             except Exception as e:
-                logging.error(str(e))
+                logging.info(str(e))
                 return str(e)
-
-        hooked_ids = [h.get('idModel') for h in client.fetch_json('/members/me/tokens?webhooks=true') if h.get('idModel')]
+        hook_apps = client.fetch_json('/members/me/tokens?webhooks=true')
+        nebri_hooks = [hook for hook in hook_apps if hook['identifier'] == 'nebrios'][0]
+        hooked_ids = [
+            hook.get('idModel') for hook in
+            nebri_hooks['webhooks']
+            if hook.get('idModel')
+        ]
         webhooks = Webhook.filter(user=user)
         cards = TrelloCard.filter(user=user)
         hooks_deleted = 0
@@ -280,6 +306,7 @@ def delete_hooks(user, hook_id=None):
             cards_deleted += 1
     except Exception as e:
         error = str(e)
+        logging.info(error)
     p = Process.objects.create()
     p.hooks_deleted = hooks_deleted
     p.cards_deleted = cards_deleted
@@ -290,12 +317,12 @@ def delete_hooks(user, hook_id=None):
 
 
 def setup_webhooks(user):
+    delete_hooks(user)
     try:
         logging.info('get client')
         client = get_client(user)
         hook_apps = client.fetch_json('/members/me/tokens?webhooks=true')
         nebri_hooks = [hook for hook in hook_apps if hook['identifier'] == 'nebrios'][0]
-        logging.info(nebri_hooks)
         hooked_ids = [
             hook.get('idModel') for hook in
             nebri_hooks['webhooks']
@@ -307,13 +334,8 @@ def setup_webhooks(user):
             if board.id not in hooked_ids:
                 logging.info('create webhook for board')
                 create_webhook(board.id, client, user)
-            logging.info('begin parsing card info')
-            boardid_to_cardmodels(board.id, client, user)
-        p = Process.objects.create()
-        p.load_trello_email_card = True
-        p.save()
     except Exception as e:
-        logging.debug(str(e))
+        logging.info(str(e))
 
 
 def template_checklist_parser(card):

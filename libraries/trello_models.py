@@ -59,6 +59,7 @@ class Webhook(NebriOSModel):
     model_id = NebriOSField(required=True)
     model_type = NebriOSField(required=True)
     trello_id = NebriOSField(required=True, default='')
+    cards_imported = NebriOSField(required=True, default=False)
 
 
 class TrelloUserInfo(NebriOSModel):

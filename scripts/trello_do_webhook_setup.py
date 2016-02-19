@@ -1,4 +1,4 @@
-from trello_utils import setup_webhooks, delete_hooks
+from trello_utils import setup_webhooks
 
 class trello_do_webhook_setup(NebriOS):
 
@@ -10,9 +10,4 @@ class trello_do_webhook_setup(NebriOS):
 
     def action(self):
         self.trello_watch_boards_for_user = "Ran"
-        try:
-            delete_hooks(self.user)
-            setup_webhooks(self.user)
-        except Exception as e:
-            self.error = str(e)
-        load_card('trello-webhook-setup-complete')
+        setup_webhooks(self.user)
