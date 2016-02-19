@@ -7,7 +7,10 @@ This app is intended for use in a NebriOS instance. Visit https://nebrios.com to
 First install requirements:
 
 ```
+pip install -U git+https://github.com/koryd-bixly/nebri-trello.git
+
 pip install -r requirements.txt
+
 ```
 
 Please setup an instance_settings.py file in your libraries with the following information:
