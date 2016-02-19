@@ -1,7 +1,9 @@
 <polymer-element name="trello-webhook-delete-complete">
     <template>
         <h2>Trello Webhook Deletion Has Completed</h2>
-        Congrats! We've successfully your Trello webhooks. :)
+        Congrats! We've successfully deleted your Trello webhooks. :)<br>
+        Deleted <span>{{kvps.hooks_deleted.value}}</span> webhooks &
+        <span>{{kvps.cards_deleted}}</span> cards
     </template>
     <script>
         Polymer("trello-webhook-delete-complete", {});
