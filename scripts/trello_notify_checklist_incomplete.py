@@ -11,15 +11,14 @@ class trello_notify_checklist_incomplete(NebriOS):
 
     def action(self):
         self.notify_checklist_incomplete = 'Ran'
-        logging.debug(self.last_actor)
         hook = Webhook.get(model_id=self.card_data['idBoard'])
         card = TrelloCard.get(idCard=self.card_data['id'])
-        logging.debug(hook.user)
         unarchived = unarchive_card(self.card_data['id'], hook.user)
         if unarchived == True:
             if len(self.card_data['idMembers']) == 0:
                 trello_user = card.creator
-                send_email('briem@bixly.com', """
+                to = trello_user.email if trello_user.email != '' else 'briem@bixly.com'
+                send_email(to, """
                     Hello, A card has been archived that has an incomplete checklist. It has
                     been unarchived. Please take a moment to look into this matter. %s Thanks!
                     The Nebri Support Team This email should have been sent to %s.
@@ -27,7 +26,8 @@ class trello_notify_checklist_incomplete(NebriOS):
             else:
                 for id in self.card_data['idMembers']:
                     member = TrelloUserInfo.get(trello_id=id)
-                    send_email('briem@bixly.com', """
+                    to = member.email if member.email != '' else 'briem@bixly.com'
+                    send_email(to, """
                     Hello, A card has been archived that has an incomplete checklist. It has
                     been unarchived. Please take a moment to look into this matter. %s Thanks!
                     The Nebri Support Team This email should have been sent to %s.
