@@ -15,7 +15,12 @@ def boardid_to_cardmodels(idboard, client=None, user=None):
     members = json_members_from_board(idboard, client)
 
     for card in cards:
-        card_json_to_model(card, user)
+        if card.get('due') is None or card.get('due') == '':
+            continue
+        elif card.get('labels', []) == []:
+            continue
+        else:
+            card_json_to_model(card, user)
 
     for member in members:
         member_json_to_model(member)
@@ -84,13 +89,14 @@ def card_json_to_model(card, user):
     card_obj.due_datetime = None
     card_obj.name = card.get('name')
     card_obj.shortUrl = card.get('shortUrl')
-    card_obj.card_json = card
+    # card_obj.card_json = card
     card_obj.closed = card.get('closed', False)
     card_obj.is_template = False
     card_obj.template_idBoard = None
     card_obj.template_idList = None
     card_obj.drip = None
     card_obj.dateLastActivity = card.get('dateLastActivity')
+    card_obj.desc = card.get('desc')
 
     logging.info(str(card_obj.due))
 
@@ -339,8 +345,9 @@ def setup_webhooks(user):
 
 
 def template_checklist_parser(card):
-    json_data = card.card_json
-    description = json_data.get('desc')
+    # json_data = card.card_json
+    # description = json_data.get('desc')
+    description = card.desc
     out_data = None
     now = datetime.now()
     PREBUILT = dict(
