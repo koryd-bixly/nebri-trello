@@ -23,9 +23,10 @@ class trello_notify_checklist_incomplete(NebriOS):
                     Hello, A card has been archived that has an incomplete checklist. It has
                     been unarchived. Please take a moment to look into this matter. %s Thanks!
                     The Nebri Support Team This email should have been sent to %s.
-                """ % (self.card_data['shortUrl'], trello_user.username), "An Incomplete Card has been Archived")
+                """ % (self.card_data['shortUrl'], trello_user.trello_username), "An Incomplete Card has been Archived")
             else:
-                for member in self.card_data['idMembers']:
+                for id in self.card_data['idMembers']:
+                    member = TrelloUserInfo.get(trello_id=id)
                     send_email('briem@bixly.com', """
                     Hello, A card has been archived that has an incomplete checklist. It has
                     been unarchived. Please take a moment to look into this matter. %s Thanks!
