@@ -18,12 +18,13 @@ class trello_handle_unapproved_archived(NebriOS):
 
         unarchived = unarchive_card(self.card_data['id'], hook.user)
         if unarchived == True:
-            trello_user = TrelloUserInfo.get(trello_id=card.idMemberCreator)
-            send_email('briem@bixly.com', """
+            trello_user = card.creator
+            to = trello_user.email if trello_user.email != '' else 'briem@bixly.com'
+            send_email(to, """
             Hello, A card has been archived which was not approved by a board admin. It has
             been unarchived. Please take a moment to look into this matter. %s Thanks!
-            The Nebri Support Team  Team This email should have been sent to %s.
-            """ % (self.card_data['shortUrl'], trello_user.username), "An Unapproved Card has been Archived")
+            The Nebri Support Team This email should have been sent to %s.
+            """ % (self.card_data['shortUrl'], trello_user.trello_username), "An Unapproved Card has been Archived")
         else:
             send_email('briem@bixly.com', """
             An error occurred... %s

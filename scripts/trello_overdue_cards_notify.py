@@ -43,21 +43,23 @@ class trello_overdue_cards_notify(NebriOS):
         notify_users = defaultdict(list)
         logging.info('starting loop of overdue_cards')
         for card in overdue_cards:
-            if card.idMemberCreator is None or card.idMemberCreator is False:
+            if card.creator is None or card.creator is False:
                 logging.info('getting card creator: {}'.format(card.idCard))
                 # get card creator if not set in model
-                creator, date_str = get_card_creator(card.idCard, client)
-                logging.info('Creator is: {}'.format(creator))
-                if creator is None:
+                card_creator, date_str = get_card_creator(card.idCard, client)
+                logging.info('Creator is: {}'.format(card_creator))
+                if card_creator is None:
                     continue
-                card.idMemberCreator = creator
+                creator = TrelloUserInfo(trello_id=card_creator)
+                card.creator = creator
                 card.created = date_str
                 card.save()
-            notify_users[card.idMemberCreator].append(card.shortUrl)
+            notify_users[card.creator.username].append(card.shortUrl)
+        self.users_to_notify = notify_users
 
         for user in notify_users:
             try:
-                trello_user = TrelloUserInfo.get(trello_id=user)
+                trello_user = TrelloUserInfo.get(trello_username=user)
                 if trello_user.email == '':
                     to = self.default_user
                 else:

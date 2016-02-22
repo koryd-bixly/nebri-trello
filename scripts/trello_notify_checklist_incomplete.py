@@ -11,27 +11,27 @@ class trello_notify_checklist_incomplete(NebriOS):
 
     def action(self):
         self.notify_checklist_incomplete = 'Ran'
-        logging.debug(self.last_actor)
         hook = Webhook.get(model_id=self.card_data['idBoard'])
         card = TrelloCard.get(idCard=self.card_data['id'])
-        logging.debug(hook.user)
         unarchived = unarchive_card(self.card_data['id'], hook.user)
         if unarchived == True:
             if len(self.card_data['idMembers']) == 0:
-                trello_user = TrelloUserInfo.get(trello_id=card.idMemberCreator)
-                send_email('briem@bixly.com', """
+                trello_user = card.creator
+                to = trello_user.email if trello_user.email != '' else 'briem@bixly.com'
+                send_email(to, """
                     Hello, A card has been archived that has an incomplete checklist. It has
                     been unarchived. Please take a moment to look into this matter. %s Thanks!
                     The Nebri Support Team This email should have been sent to %s.
-                """ % (self.card_data['shortUrl'], trello_user.username), "An Incomplete Card has been Archived")
+                """ % (self.card_data['shortUrl'], trello_user.trello_username), "An Incomplete Card has been Archived")
             else:
-                for member in self.card_data['idMembers']:
-                    trello_user = TrelloUserInfo.get(trello_id=member)
-                    send_email('briem@bixly.com', """
+                for id in self.card_data['idMembers']:
+                    member = TrelloUserInfo.get(trello_id=id)
+                    to = member.email if member.email != '' else 'briem@bixly.com'
+                    send_email(to, """
                     Hello, A card has been archived that has an incomplete checklist. It has
                     been unarchived. Please take a moment to look into this matter. %s Thanks!
                     The Nebri Support Team This email should have been sent to %s.
-                    """ % (self.card_data['shortUrl'], trello_user.username), "An Incomplete Card has been Archived")
+                    """ % (self.card_data['shortUrl'], member.trello_username), "An Incomplete Card has been Archived")
         else:
             send_email('briem@bixly.com', """
             An error occurred... %s
