@@ -65,7 +65,7 @@ class trello_overdue_cards_notify(NebriOS):
                 send_email(to, '{id}  the following cards are '
                                               'overdue:\n{tlist}'.format(
                     id=trello_user.trello_fullname,
-                    tlist='\n'.join(notify_users.get(user))
+                    tlist='\n'.join(notify_users.get(user), "A card is overdue")
                 ))
             except Exception as e:
                 # if the user is not found, then let the last actor know
