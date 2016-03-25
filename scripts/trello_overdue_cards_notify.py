@@ -4,7 +4,7 @@ logging.basicConfig(filename='trello_overdue_cards_notify.log', level=logging.IN
 from collections import defaultdict
 from trello_models import TrelloCard, TrelloUserInfo
 from trello_utils import get_card_creator, get_client
-from instance_settings import DEFAULT_USER
+# from instance_settings import DEFAULT_USER
 # 234
 
 
@@ -21,7 +21,7 @@ class trello_overdue_cards_notify(NebriOS):
     def check(self):
         # look for overdue cards within the last day...
         if self.default_user is None:
-            self.default_user = DEFAULT_USER
+            self.default_user = shared.DEFAULT_USER
         logging.info('Starting Check')
 
         if self.trello_overdue_cards_notify == True:

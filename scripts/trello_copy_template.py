@@ -6,7 +6,7 @@ from trello import TrelloClient
 from trello_utils import get_client, template_checklist_parser, template_checklist_setup, copy_template_card
 
 from trello_prebuilt import PREBUILT
-from instance_settings import DEFAULT_USER
+# from instance_settings import DEFAULT_USER
 
 # def create_oauth_token(expiration=None, scope=None, key=None, secret=None, name=None, output=True):
 
@@ -18,7 +18,7 @@ class trello_copy_template(NebriOS):
     def check(self):
         logging.info('start check')
         if self.default_user is None:
-            self.default_user = DEFAULT_USER
+            self.default_user = shared.DEFAULT_USER
         if self.trello_copy_template == True:
             try:
                 card = TrelloCard.get(

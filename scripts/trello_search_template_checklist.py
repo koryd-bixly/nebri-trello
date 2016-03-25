@@ -2,7 +2,7 @@ import logging
 logging.basicConfig(filename='trello_search_template_checklist.log', level=logging.INFO)
 
 from trello_models import TrelloCard, TrelloUserInfo
-from instance_settings import DEFAULT_USER
+# from instance_settings import DEFAULT_USER
 # 25
 
 
@@ -22,7 +22,7 @@ class trello_search_template_checklist(NebriOS):
         self.trello_search_template_checklist = 'RAN: {}'.format(datetime.now())
 
         if self.default_user is None:
-                self.default_user = DEFAULT_USER
+                self.default_user = shared.DEFAULT_USER
 
         template_cards = TrelloCard.filter(is_template=True, closed=False, drip=self.drip, user=self.default_user)
         logging.info('starting action')

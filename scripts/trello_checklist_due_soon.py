@@ -3,7 +3,6 @@ import logging
 logging.basicConfig(filename='trello_checklist_due_soon.log', level=logging.INFO)
 
 from trello_models import TrelloCard, TrelloUserInfo
-from instance_settings import DEFAULT_USER
 
 class trello_checklist_due_soon(NebriOS):
     '''
@@ -13,7 +12,7 @@ class trello_checklist_due_soon(NebriOS):
 
     def check(self):
         if self.default_user is None:
-            self.default_user = DEFAULT_USER
+            self.default_user = shared.DEFAULT_USER
         logging.info('THIS IS A TEST')
 
         if self.trello_checklist_due_soon == True:
