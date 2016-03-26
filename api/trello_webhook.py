@@ -43,7 +43,23 @@ def oauth_token(request):
                 logging.debug('saved except')
     except Exception as e:
         logging.debug(str(e))
-    return '200 LOL'
+    return '200 OK'
+    
+    
+def setup(request):
+    try:
+        if request.FORM:
+            user = request.user
+            shared.TRELLO_API_KEY = request.FORM.trello_api_key
+            shared.TRELLO_API_SECRET = request.FORM.trello_api_secret
+            shared.DEFAULT_USER = request.FORM.default_user
+            p = Process.objects.create()
+            p.trello_webhook_setup = True
+            p.last_actor = request.FORM.default_user
+            p.save()
+    except Exception as e:
+        logging.debug(str(e))
+    return '200 OK'
 
 
 def callback(request):
@@ -91,4 +107,16 @@ def callback(request):
         p.default_user = user
         p.save()
         logging.debug(p)
+    return '200 OK'
+    
+    
+def update_users(request):
+    try:
+        users_to_update = request.FORM.users_to_update
+        for user in users_to_update:
+            member = TrelloUserInfo.get(trello_id=user['id'])
+            member.email = user['email']
+            member.save()
+    except Exception as e:
+        logging.error(str(e))
     return '200 OK'

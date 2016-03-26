@@ -1,11 +1,20 @@
-<polymer-element name="trello-webhook-delete-complete">
+<dom-module id="trello-webhook-delete-complete">
     <template>
-        <h2>Trello Webhook Deletion Has Completed</h2>
-        Congrats! We've successfully deleted your Trello webhooks. :)<br>
-        Deleted <span>{{kvps.hooks_deleted.value}}</span> webhooks &
-        <span>{{kvps.cards_deleted}}</span> cards
+        <template is="dom-if" if="{{kvps.error}}">
+            <h2>Oops...</h2>
+            We've hit a snag during deletion...<br>
+            <span>{{kvps.error}}</span>
+        </template>
+        <template is="dom-if" if="{{!kvps.error}}">
+            <h2>Trello Webhook Deletion Has Completed</h2>
+            Congrats! We've successfully deleted your Trello webhooks. :)<br>
+        </template>
+        Deleted <span>{{kvps.hooks_deleted}}</span> webhooks & <span>{{kvps.cards_deleted}}</span> cards
     </template>
     <script>
-        Polymer("trello-webhook-delete-complete", {});
+        Polymer({
+            is: "trello-webhook-delete-complete",
+            behaviors: [NebriElement]
+        });
     </script>
-</polymer-element>
+</dom-module>

@@ -3,6 +3,7 @@ import logging
 logging.basicConfig(filename='oauth_token.log', level=logging.DEBUG)
 
 def oauth_token(request):
+    return
     logging.debug(str(request.FORM))
     if request.FORM:
         user = request.user

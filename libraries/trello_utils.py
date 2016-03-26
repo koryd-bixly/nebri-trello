@@ -222,12 +222,12 @@ def get_card_creator(idcard, client=None, params=None):
             params = None
         except Exception as e:
             raise Exception('Could not get client: %s' % str(e))
-    if params is None:
-        params = dict(filter='copyCard,createCard')
+    # if params is None:
+    sparams = dict(filter='all')
     try:
         response = client.fetch_json(
             'cards/{id}/actions'.format(id=idcard),
-            query_params=params
+            query_params=sparams
         )
         logging.info('found!')
     except Exception as e:
@@ -252,6 +252,8 @@ def get_card_creator(idcard, client=None, params=None):
 def delete_hooks(user, hook_id=None):
     error = None
     logging.info('inside delete_hooks')
+    hooks_deleted = 0
+    cards_deleted = 0
     try:
         client = get_client(user)
         hook_apps = client.fetch_json('/members/me/tokens?webhooks=true')
@@ -337,9 +339,9 @@ def setup_webhooks(user):
             for member in members:
                 member_json_to_model(member)
             logging.info('handling board %s' % board.id)
-            if board.id not in hooked_ids:
-                logging.info('create webhook for board')
-                create_webhook(board.id, client, user)
+            # if board.id not in hooked_ids:
+            #     logging.info('create webhook for board')
+            #     create_webhook(board.id, client, user)
             members = json_members_from_board(board.id, client)
 
             for member in members:
@@ -350,6 +352,10 @@ def setup_webhooks(user):
         p.last_actor = user
         p.save()
     except Exception as e:
+        try:
+            logging.info(str(board.id))
+        except:
+            pass
         logging.info(str(e))
 
 

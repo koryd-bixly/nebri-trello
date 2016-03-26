@@ -1,0 +1,18 @@
+<dom-module id="trello-get-started">
+    <style>
+    </style>
+    <template>
+        <h2>Setup Trello</h2>
+        <nebri-form name="trello_setup" id="trello_setup" target="trello_webhook.setup">
+            <nebri-string id="trello_api_key" label="Trello API key" required></nebri-string>
+            <nebri-string id="trello_api_secret" label="Trello API Secret" required></nebri-string>
+            <nebri-email id="default_user" label="Default contact email" placeholder="bob@example.com" required></nebri-email>
+        </nebri-form>
+    </template>
+    <script>
+        Polymer({
+            is: "trello-get-started",
+            behaviors: [NebriElement]
+        });
+    </script>
+</dom-module>

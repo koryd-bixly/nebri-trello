@@ -54,12 +54,12 @@ class trello_overdue_cards_notify(NebriOS):
                 card.creator = creator
                 card.created = date_str
                 card.save()
-            notify_users[card.creator.username].append(card.shortUrl)
+            notify_users[card.creator.email].append(card.shortUrl)
         self.users_to_notify = notify_users
 
         for user in notify_users:
             try:
-                trello_user = TrelloUserInfo.get(trello_username=user)
+                trello_user = TrelloUserInfo.get(email=user)
                 if trello_user.email == '':
                     to = self.default_user
                 else:
@@ -67,8 +67,9 @@ class trello_overdue_cards_notify(NebriOS):
                 send_email(to, '{id}  the following cards are '
                                               'overdue:\n{tlist}'.format(
                     id=trello_user.trello_fullname,
-                    tlist='\n'.join(notify_users.get(user), "A card is overdue")
-                ))
+                    tlist='\n'.join(notify_users.get(user))
+                )
+                           )
             except Exception as e:
                 # if the user is not found, then let the last actor know
                 logging.error(str(e))
