@@ -1,6 +1,7 @@
 <dom-module id="trello-emails">
     <template>
         <h2>Trello User Email Update</h2>
+        <p>Please enter a valid email address for each user found on your Trello boards. Due to Trello privacy policies, this app is not permitted to retrieve user email information.</p>
         <nebri-form id="emailform" name="email-form" target="trello_webhook.update_users">
             <template is="dom-repeat" items="{{kvps.users_to_update}}">
                 <nebri-string id="email" label="{{item.fullname}}" placeholder="email" value="{{item.email}}"></nebri-string>

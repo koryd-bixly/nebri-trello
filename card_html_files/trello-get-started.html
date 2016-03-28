@@ -3,10 +3,11 @@
     </style>
     <template>
         <h2>Setup Trello</h2>
+        <p>To get started with your Trello integration, please visit this link:</p>
+        <p><a href="https://trello.com/app-key">Get Your Trello Key and Secret</a></p>
         <nebri-form name="trello_setup" id="trello_setup" target="trello_webhook.setup">
             <nebri-string id="trello_api_key" label="Trello API key" required></nebri-string>
             <nebri-string id="trello_api_secret" label="Trello API Secret" required></nebri-string>
-            <nebri-email id="default_user" label="Default contact email" placeholder="bob@example.com" required></nebri-email>
         </nebri-form>
     </template>
     <script>

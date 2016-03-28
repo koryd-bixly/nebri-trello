@@ -52,10 +52,10 @@ def setup(request):
             user = request.user
             shared.TRELLO_API_KEY = request.FORM.trello_api_key
             shared.TRELLO_API_SECRET = request.FORM.trello_api_secret
-            shared.DEFAULT_USER = request.FORM.default_user
+            shared.DEFAULT_USER = request.user
             p = Process.objects.create()
             p.trello_webhook_setup = True
-            p.last_actor = request.FORM.default_user
+            p.last_actor = request.user
             p.save()
     except Exception as e:
         logging.debug(str(e))
