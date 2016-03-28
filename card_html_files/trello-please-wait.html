@@ -1,9 +1,11 @@
-<polymer-element name="trello-please-wait">
+<dom-module id="trello-please-wait">
     <template>
-        <h2>Trello Webhook Setup Is Running</h2>
-        Please wait. This can take a few minutes...
+        <h2>Please Wait</h2>
     </template>
     <script>
-        Polymer("trello-please-wait", {});
+        Polymer({
+            is: "trello-please-wait",
+            behaviors: [NebriElement]
+        });
     </script>
-</polymer-element>
+</dom-module>
