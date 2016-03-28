@@ -4,33 +4,21 @@ Trello Webhook App for NebriOS
 This app is intended for use in a NebriOS instance. Visit https://nebrios.com to sign up for free!
 
 <h4>Setup</h4>
-First install requirements:
 
+Fast Setup:
 ```
-pip install -U git+https://github.com/koryd-bixly/nebri-trello.git
-
-pip install -r requirements.txt
-
+pip install git+https://github.com/frankie-bixly/nebri-trello.git
 ```
 
-Please setup an instance_settings.py file in your libraries with the following information:
-   ```
-      INSTANCE_NAME = <instance_name>
-      INSTANCE_FQDN = <instance_fully_qualified_domain_name>
-      INSTANCE_HTTP_URL = <instance_http_url>
-      INSTANCE_HTTPS_URL = <instance_https_url>
-      INSTANCE_SSH_IP = <instance_ssh_ip>
-      INSTANCE_SSH_PORT = <instance_ssh_port>
-      DEFAULT_USER = <your_email>
-   ```
-Please ensure that all files are placed in the correct places over SFTP. For example, all scripts should go to the /script directory on your instance.
-If this is the first time setting up these webhooks, a trello api key/secret pair will need to be supplied. This pair can be acquired at https://trello.com/1/appkey/generate. You must be logged in to trello to generate an app key/secret pair.
-You can set the shared KVPs in debug mode as follows:
-  ```
-  shared.trello_api_key := <api_key>
-  shared.trello_api_secret := <api_secret>
-  shared.DEFAULT_USER := <your_email>
-  ```
+Next, from your instance sidebar, go Advanced> Sidebar Links
+
+Create a new link, use the name "Setup Trello" and add the following URL:
+```
+/api/v1/cards/load?name=trello-get-started
+```
+
+A new sidebar link will show up. Click it to get started!
+
 
 Once all files are properly uploaded, this app needs to be set up from debug mode. Make sure that the subject line is clear in Debug mode and input the following:
     ```
