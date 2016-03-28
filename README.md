@@ -7,7 +7,7 @@ This app is intended for use in a NebriOS instance. Visit https://nebrios.com to
 
 Fast Setup:
 ```
-pip install git+https://github.com/frankie-bixly/nebri-trello.git
+pip install git+https://github.com/koryd-bixly/nebri-trello.git
 ```
 
 Next, from your instance sidebar, go Advanced> Sidebar Links
