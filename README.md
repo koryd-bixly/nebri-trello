@@ -29,6 +29,7 @@ You can set the shared KVPs in debug mode as follows:
   ```
   shared.trello_api_key := <api_key>
   shared.trello_api_secret := <api_secret>
+  shared.DEFAULT_USER := <your_email>
   ```
 
 Once all files are properly uploaded, this app needs to be set up from debug mode. Make sure that the subject line is clear in Debug mode and input the following:
